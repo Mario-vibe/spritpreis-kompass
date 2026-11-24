@@ -240,7 +240,7 @@ function render(){
   lineChart($("ch-48"),{x:[from,to],aria:"Preisverlauf 48 Stunden und Prognose",stepTip:true,
     series:[{name:"gemessen",color:"var(--s1)",pts:meas,step:true,end:true},{name:"Prognose",color:"var(--s1)",pts:fpts.length?[[last.t,last.best]].concat(fpts.map(p=>[p.t,p.y])):[],step:true,dash:true}],
     bands:[{pts:fpts.map(p=>[p.t,p.lo,p.hi])}],vlines:vl,xTicks:ticks,tol:10*MIN,
-    yFmt:v=>de(v/100,2),tipFmt:priceTxt,xFmt:t=>wd(t)+" "+hm(t)+" Uhr"});
+    yFmt:v=>de(v/100,2),tipFmt:priceTxt,xFmt:t=>new Date(t).toLocaleDateString("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",year:"numeric"})+", "+hm(t)+" Uhr"});
 
   // Tagesprofil
   const prof=k=>(F.byK[k]||[]).map(p=>[p.m,p.best]);
