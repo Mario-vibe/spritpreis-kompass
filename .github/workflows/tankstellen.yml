@@ -1,0 +1,54 @@
+name: Tankstellen suchen
+
+on:
+  workflow_dispatch:
+    inputs:
+      breite:
+        description: "Breitengrad, z. B. 53.8350 (in Google Maps: Rechtsklick auf den Ort)"
+        required: true
+      laenge:
+        description: "Längengrad, z. B. 9.9620"
+        required: true
+      radius:
+        description: "Umkreis in km (höchstens 25)"
+        default: "5"
+      anzahl:
+        description: "Wie viele der nächstgelegenen Tankstellen übernehmen (0 = nur anzeigen)"
+        default: "6"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daten
+  cancel-in-progress: false
+
+jobs:
+  suchen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tankstellen im Umkreis suchen
+        env:
+          TK_API_KEY: ${{ secrets.TK_API_KEY }}
+          BREITE: ${{ inputs.breite }}
+          LAENGE: ${{ inputs.laenge }}
+          RADIUS: ${{ inputs.radius }}
+          ANZAHL: ${{ inputs.anzahl }}
+        run: |
+          cd scripts
+          set -o pipefail
+          python3 find_stations.py "$BREITE" "$LAENGE" "$RADIUS" --save "$ANZAHL" | tee liste.txt
+          { echo '### Gefundene Tankstellen'; echo '```'; cat liste.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          rm liste.txt
+
+      - name: Auswahl speichern
+        run: |
+          git config user.name "spritpreis-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add config.json
+          if ! git diff --cached --quiet; then
+            git commit -q -m "Tankstellen eingetragen"
+            git pull -q --rebase && git push -q
+          fi

@@ -1,0 +1,59 @@
+name: Marktdaten und Historie
+
+on:
+  schedule:
+    - cron: "23 4 * * *"   # täglich gegen 5 bzw. 6 Uhr deutscher Zeit
+  workflow_dispatch:
+    inputs:
+      tage:
+        description: "Wie viele vergangene Tage aus dem Tankerkönig-Datenbestand laden (z. B. 120 beim ersten Mal)"
+        default: "2"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: daten
+  cancel-in-progress: false
+
+jobs:
+  taeglich:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rohöl, Großhandel und Wechselkurs laden
+        run: python3 scripts/fetch_market.py
+
+      - name: Historische Preise übernehmen (falls Zugang eingerichtet)
+        env:
+          TK_HISTORY_URL: ${{ secrets.TK_HISTORY_URL }}
+          TK_HISTORY_USER: ${{ secrets.TK_HISTORY_USER }}
+          TK_HISTORY_PASS: ${{ secrets.TK_HISTORY_PASS }}
+          TAGE: ${{ github.event.inputs.tage || '2' }}
+        run: python3 scripts/import_history.py --days "$TAGE"
+
+      - name: Seite aktualisieren
+        run: python3 scripts/build_site.py
+
+      - name: Daten speichern
+        run: |
+          git config user.name "spritpreis-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data docs/data
+          if ! git diff --cached --quiet; then
+            git commit -q -m "Marktdaten $(date -u +%Y-%m-%d)"
+            git pull -q --rebase && git push -q
+          fi
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - id: deploy
+        uses: actions/deploy-pages@v4

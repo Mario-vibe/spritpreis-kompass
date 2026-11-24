@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Spritpreis-Kompass</title>
+<meta name="theme-color" content="#0d5c63">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+[hidden]{display:none!important}
+/* Layout: Steuerleiste oben, dann Urteil + Preissäule, darunter Diagramme vom Kurzfristigen (Stunden) zum Langfristigen (Wochen, Rohstoffmarkt). */
+:root{
+  --bg:#f3f5f6; --surface:#ffffff; --ink:#10201f; --ink-2:#4a5a5c; --ink-3:#7b898b;
+  --line:#dde3e5; --grid:#e8ecee; --accent:#0d5c63; --accent-soft:#d9ecec;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --band:rgba(42,120,214,.16); --range:rgba(13,92,99,.08);
+  --good:#0a7a3b; --good-bg:#e1f3e7; --warn:#9a5b00; --warn-bg:#fcefd6; --bad:#b42323; --bad-bg:#fbe3e3;
+  --pylon:#0d1f22; --pylon-ink:#ffd25a;
+  --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1617; --surface:#172123; --ink:#eaf0f0; --ink-2:#b3c0c1; --ink-3:#86969a;
+  --line:#2a3739; --grid:#223033; --accent:#6cc3c9; --accent-soft:#1d3436;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --band:rgba(57,135,229,.22); --range:rgba(108,195,201,.08);
+  --good:#5fd08b; --good-bg:#173323; --warn:#f0b54a; --warn-bg:#3a2b10; --bad:#ff8a80; --bad-bg:#3b1a1a;
+  --pylon:#060c0d; --pylon-ink:#ffd25a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1617; --surface:#172123; --ink:#eaf0f0; --ink-2:#b3c0c1; --ink-3:#86969a;
+  --line:#2a3739; --grid:#223033; --accent:#6cc3c9; --accent-soft:#1d3436;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --band:rgba(57,135,229,.22); --range:rgba(108,195,201,.08);
+  --good:#5fd08b; --good-bg:#173323; --warn:#f0b54a; --warn-bg:#3a2b10; --bad:#ff8a80; --bad-bg:#3b1a1a;
+  --pylon:#060c0d; --pylon-ink:#ffd25a; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.wrap{max-width:1120px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:20px}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;letter-spacing:.01em;text-wrap:balance;margin:0}
+h1{font-size:2rem;line-height:1}
+h2{font-size:1.45rem}
+h3{font-size:1.15rem}
+p{margin:0}
+.muted{color:var(--ink-2)}
+.small{font-size:.85rem}
+.num{font-variant-numeric:tabular-nums}
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;flex-direction:column;gap:4px}
+.eyebrow{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-weight:600}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px}
+.seg button{font:600 .95rem var(--f-body);border:0;background:none;color:var(--ink-2);padding:7px 16px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--surface)}
+.seg button:focus-visible,.btn:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.demo{font-size:.78rem;font-weight:600;color:var(--warn);background:var(--warn-bg);padding:5px 10px;border-radius:999px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0}
+.panel-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 16px;margin-bottom:10px}
+.hero{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px}
+@media (max-width:820px){.hero{grid-template-columns:1fr}}
+.verdict{display:grid;gap:14px}
+.verdict .state{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:.85rem;padding:5px 12px;border-radius:999px;justify-self:start}
+.state.good{background:var(--good-bg);color:var(--good)}
+.state.warn{background:var(--warn-bg);color:var(--warn)}
+.state.bad{background:var(--bad-bg);color:var(--bad)}
+.verdict .headline{font-family:var(--f-display);font-size:2.3rem;line-height:1.05;font-weight:700}
+.compare{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;border-top:1px solid var(--line);padding-top:14px}
+@media (max-width:520px){.compare{grid-template-columns:1fr}}
+.compare .k{font-size:.78rem;color:var(--ink-2)}
+.compare .v{font-family:var(--f-display);font-size:1.5rem;font-weight:600}
+.up{color:var(--bad)} .down{color:var(--good)}
+.pylon{background:var(--pylon);color:#e8eeee;border-radius:14px;padding:18px;display:grid;gap:10px;align-content:start;border:1px solid var(--line)}
+.pylon .lbl{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:#9fb2b4}
+.pylon .price{font-family:var(--f-display);font-weight:700;font-size:4.6rem;line-height:.9;color:var(--pylon-ink);font-variant-numeric:tabular-nums}
+.pylon .price sup{font-size:.45em;vertical-align:top;position:relative;top:.12em}
+.pylon .where{font-size:.92rem;color:#cfdcdd}
+.pylon .clock{font-family:var(--f-display);font-size:1.15rem;color:#e8eeee}
+.notice{display:flex;gap:12px;align-items:flex-start;background:var(--warn-bg);color:var(--ink);border-radius:12px;padding:12px 16px}
+.notice b{color:var(--warn)}
+.mama{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.mama .txt{flex:1 1 320px;min-width:0}
+.btn{font:600 .9rem var(--f-body);border:1px solid var(--accent);background:var(--accent-soft);color:var(--ink);padding:8px 14px;border-radius:10px;cursor:pointer}
+.chart{position:relative;width:100%;min-width:0}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart text{font-family:var(--f-body);font-size:11px;fill:var(--ink-3)}
+.chart .lab{fill:var(--ink-2);font-weight:600}
+.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:.8rem;box-shadow:0 6px 20px rgba(0,0,0,.12);white-space:nowrap;z-index:2}
+.tip .t{font-weight:600;margin-bottom:4px}
+.tip .r{display:flex;gap:8px;align-items:center}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.82rem;color:var(--ink-2);margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:14px;height:3px;border-radius:2px;display:inline-block}
+.sw.dash{background:repeating-linear-gradient(90deg,var(--s1) 0 4px,transparent 4px 7px)!important}
+.sw.box{height:10px;width:14px;border-radius:3px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+@media (max-width:820px){.grid2{grid-template-columns:1fr}}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);text-align:left;font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px;border-bottom:1px solid var(--grid);vertical-align:middle;white-space:nowrap}
+td.p{font-family:var(--f-display);font-size:1.35rem;font-weight:600;font-variant-numeric:tabular-nums}
+td.p sup{font-size:.6em}
+tr.best td{background:var(--accent-soft)}
+.tag{font-size:.72rem;font-weight:600;color:var(--accent);margin-left:6px}
+.horizon{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:820px){.horizon{grid-template-columns:1fr}}
+.hcard{border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:8px;align-content:start}
+.meter{display:flex;gap:3px}
+.meter i{height:6px;flex:1;border-radius:3px;background:var(--grid)}
+.meter i.on{background:var(--accent)}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}
+@media (max-width:520px){.stats{grid-template-columns:1fr}}
+.stats .v{font-family:var(--f-display);font-size:1.4rem;font-weight:600}
+details{border-top:1px solid var(--line);padding-top:12px}
+details+details{margin-top:12px}
+summary{cursor:pointer;font-family:var(--f-display);font-size:1.2rem;font-weight:600}
+.prose{display:grid;gap:10px;max-width:72ch;margin-top:10px}
+.prose ul{margin:0;padding-left:20px;display:grid;gap:6px}
+a{color:var(--accent)}
+footer{font-size:.8rem;color:var(--ink-3)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <span class="eyebrow" id="eyebrow">Tankstellen in der Umgebung</span>
+      <h1>Spritpreis-Kompass</h1>
+    </div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Kraftstoff" id="seg"></div>
+      <span class="demo" id="demo-badge" hidden>Beispieldaten, noch keine echten Preise</span>
+    </div>
+  </header>
+
+  <div class="notice" id="msg" hidden></div>
+
+  <section class="hero">
+    <div class="panel verdict">
+      <span id="v-state" class="state good">●</span>
+      <div id="v-head" class="headline">Preise werden geladen …</div>
+      <p id="v-sub" class="muted"></p>
+      <div class="compare">
+        <div><div class="k">gegenüber gestern, gleiche Uhrzeit</div><div id="c-yday" class="v num">–</div></div>
+        <div><div class="k">gegenüber Ø 7 Tage, gleiche Uhrzeit</div><div id="c-week" class="v num">–</div></div>
+        <div><div class="k">Rang unter den Tagestiefs der letzten 30 Tage</div><div id="c-rank" class="v num">–</div></div>
+      </div>
+    </div>
+    <div class="pylon" aria-live="polite">
+      <span class="lbl" id="p-fuel">günstigster Preis jetzt</span>
+      <div class="price" id="p-price">–</div>
+      <div class="where" id="p-where"></div>
+      <div class="clock" id="p-clock"></div>
+    </div>
+  </section>
+
+  <div class="notice" id="rabatt" hidden></div>
+
+  <section class="panel mama" id="mama" hidden>
+    <div class="txt">
+      <h3>Info für Mama · Super E10</h3>
+      <p id="mama-text" class="muted"></p>
+    </div>
+    <button class="btn" id="mama-copy" type="button">Nachricht kopieren</button>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Letzte 48 Stunden und Prognose bis morgen Mittag</h2>
+      <span class="small muted">günstigste Tankstelle · senkrechte Linien = 12 Uhr</span>
+    </div>
+    <div class="chart" id="ch-48"></div>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--s1)"></i>gemessen</span>
+      <span><i class="sw dash"></i>Prognose</span>
+      <span><i class="sw box" style="background:var(--band)"></i>übliche Schwankung (80 %)</span>
+    </div>
+  </section>
+
+  <div class="grid2">
+    <section class="panel">
+      <div class="panel-head"><h2>Heute, gestern und der übliche Tag</h2></div>
+      <p class="small muted" style="margin-bottom:8px">Ein Preistag beginnt um 12 Uhr mit der einzigen erlaubten Erhöhung und fällt dann bis zum nächsten Mittag.</p>
+      <div class="chart" id="ch-day"></div>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--s1)"></i>heute</span>
+        <span><i class="sw" style="background:var(--s2)"></i>gestern</span>
+        <span><i class="sw" style="background:var(--s3)"></i>Ø letzte 14 Tage</span>
+      </div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Tankstellen</h2><span class="small muted" id="tbl-time"></span></div>
+      <div class="tbl"><table>
+        <thead><tr><th>Tankstelle</th><th>km</th><th>jetzt</th><th>ggü. gestern</th><th>seit 12 Uhr</th></tr></thead>
+        <tbody id="tbl"></tbody>
+      </table></div>
+    </section>
+  </div>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Rückblick und Ausblick</h2>
+      <span class="small muted">Spanne zwischen Tageshoch (12 Uhr) und Tagestief der günstigsten Tankstelle</span>
+    </div>
+    <div class="chart" id="ch-long"></div>
+    <div class="legend">
+      <span><i class="sw box" style="background:var(--band)"></i>Tagesspanne</span>
+      <span><i class="sw" style="background:var(--s1)"></i>Tagestief</span>
+      <span><i class="sw dash"></i>Ausblick Tagestief</span>
+      <span><i class="sw box" style="background:var(--range);outline:1px solid var(--line)"></i>Tankrabatt</span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2 id="mk-title">Zapfsäule, Großhandel und Rohöl im Vergleich</h2>
+      <span class="small muted">Index: erster Tag = 100, alle Werte in Euro</span>
+    </div>
+    <p class="small muted" id="mk-sub" style="margin-bottom:8px;max-width:80ch"></p>
+    <div class="chart" id="ch-mk"></div>
+    <div class="legend" id="mk-legend"></div>
+    <div class="grid2" style="margin-top:18px">
+      <div>
+        <h3>Wie viele Tage hinkt die Zapfsäule hinterher?</h3>
+        <p class="small muted" style="margin:4px 0 8px">Korrelation der täglichen Änderungen: Zapfsäule heute gegen Großhandel vor n Tagen</p>
+        <div class="chart" id="ch-lag"></div>
+      </div>
+      <div>
+        <h3>Was daraus folgt</h3>
+        <div class="stats">
+          <div><div class="small muted">stärkster Zusammenhang</div><div class="v num" id="st-lag">–</div></div>
+          <div><div class="small muted">Korrelation</div><div class="v num" id="st-r">–</div></div>
+          <div><div class="small muted">Rohöl-Korrelation</div><div class="v num" id="st-rb">–</div></div>
+        </div>
+        <p class="small muted" style="margin-top:12px" id="st-text"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Wie gut lässt sich der Preis vorhersagen?</h2></div>
+    <div class="horizon">
+      <div class="hcard">
+        <span class="eyebrow">Minuten bis Stunden</span>
+        <div class="meter" aria-label="Verlässlichkeit hoch"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>
+        <p><b>Tagesmuster aus der eigenen Datenbank.</b> Seit der 12-Uhr-Regel folgt fast jeder Tag derselben Treppe: Sprung um 12 Uhr, Senkungen am Nachmittag und Abend, Tiefpunkt kurz vor Mittag. Die Prognose nutzt den Verlauf der letzten 14 Tage.</p>
+      </div>
+      <div class="hcard">
+        <span class="eyebrow">1 bis 7 Tage</span>
+        <div class="meter" aria-label="Verlässlichkeit mittel"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+        <p><b>Großhandel mit Verzögerung.</b> Änderungen im Großhandel und beim Euro-Dollar-Kurs kommen nach einigen Tagen an der Zapfsäule an. Die Prognose rechnet die Großhandelsänderungen der letzten Tage in den Ausblick ein.</p>
+      </div>
+      <div class="hcard">
+        <span class="eyebrow">Wochen</span>
+        <div class="meter" aria-label="Verlässlichkeit gering, außer bei Steuerterminen"><i class="on"></i><i class="on"></i><i></i><i></i></div>
+        <p><b>Nur feste Termine sind sicher.</b> Der Rohölpreis gilt kurzfristig als kaum vorhersagbar. Sicher planbar sind Steuertermine wie das Ende des Tankrabatts.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <details>
+      <summary>Studien und Hintergrund zur Prognose</summary>
+      <div class="prose">
+        <ul>
+          <li><b>Raketen und Federn:</b> Preise steigen schnell, wenn Rohöl teurer wird, und fallen langsam. Grundlegend sind Bacon (1991, <i>Energy Economics</i>) und Borenstein, Cameron und Gilbert (1997, <i>Quarterly Journal of Economics</i>).</li>
+          <li><b>Deutscher Markt:</b> Haucap, Heimeshoff und Siekmann (<i>The Energy Journal</i>, 2017), Dewenter, Heimeshoff und Lüth (<i>Applied Economics Letters</i>, 2017), Assad, Clark, Ershov und Xu (<i>Journal of Political Economy</i>, 2024).</li>
+          <li><b>Österreich-Modell:</b> Dewenter und Heimeshoff (2012), Obradovits (2014, <i>International Journal of Industrial Organization</i>).</li>
+        </ul>
+        <p>Der Großhandelspreis stammt aus New York (Diesel bzw. Benzin, Hafen New York). Die Rotterdamer Notierungen, die für Deutschland maßgeblich sind, sind nicht frei verfügbar. Beide laufen aber sehr ähnlich.</p>
+      </div>
+    </details>
+  </section>
+
+  <footer>Preisdaten: Markttransparenzstelle für Kraftstoffe über <a href="https://creativecommons.tankerkoenig.de" target="_blank" rel="noopener">Tankerkönig</a>, Lizenz CC BY 4.0. Marktdaten: FRED, Federal Reserve Bank of St. Louis. Alle Angaben ohne Gewähr.</footer>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

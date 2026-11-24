@@ -1,0 +1,12 @@
+{
+  "stations": [],
+  "fuels": ["diesel", "e10"],
+  "days_on_page": 120,
+  "tax": {
+    "rabatt_start": "2026-10-01",
+    "rabatt_end": "2027-01-01",
+    "cut_ct": 14.04,
+    "energy_tax_ct": {"diesel": 47.04, "e10": 65.45, "e5": 65.45},
+    "co2_ct": {"diesel": 15.9, "e10": 13.6, "e5": 14.2}
+  }
+}
