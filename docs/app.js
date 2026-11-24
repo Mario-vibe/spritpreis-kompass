@@ -204,6 +204,8 @@ function verdict(F,fc){
 
 /* ---------- Seite füllen ---------- */
 let fuel=fuels[0];
+let mkHidden={ws:false,brent:false};
+try{const h=JSON.parse(localStorage.getItem("spk-mk-hidden")||"{}");mkHidden={ws:!!h.ws,brent:!!h.brent}}catch(e){}
 try{const f=localStorage.getItem("spk-fuel");if(fuels.includes(f))fuel=f}catch(e){}
 $("seg").innerHTML=fuels.map(f=>`<button id="fuel-${f}" type="button" data-fuel="${f}" aria-pressed="false">${FUELNAME[f]}</button>`).join("");
 const places=[...new Set(S.stations.map(s=>s.place).filter(Boolean))];
@@ -278,7 +280,10 @@ function render(){
   const pname=fuel==="diesel"?"Diesel-Großhandel":"Benzin-Großhandel";
   $("mk-title").textContent=`Zapfsäule, ${pname} und Rohöl im Vergleich`;
   $("mk-sub").textContent=`Damit Steueränderungen wie der Tankrabatt das Bild nicht verzerren, zeigt die blaue Linie den Zapfsäulenpreis ohne Mehrwertsteuer, Energiesteuer und CO₂-Preis, also Produktkosten plus Marge.`;
-  $("mk-legend").innerHTML=`<span><i class="sw" style="background:var(--s1)"></i>Zapfsäule ohne Steuern und Abgaben</span><span><i class="sw" style="background:var(--s2)"></i>${pname} (New York)</span><span><i class="sw" style="background:var(--s3)"></i>Rohöl Brent</span>`;
+  // Großhandel und Brent lassen sich per Klick auf die Legende aus- und einblenden
+  const tog=(k,color,label)=>`<button type="button" class="lg-toggle" id="mk-tog-${k}" data-k="${k}" aria-pressed="${!mkHidden[k]}" title="${mkHidden[k]?"Einblenden":"Ausblenden"}"><i class="sw" style="background:${color}"></i>${label}</button>`;
+  $("mk-legend").innerHTML=`<span><i class="sw" style="background:var(--s1)"></i>Zapfsäule ohne Steuern und Abgaben</span>${tog("ws","var(--s2)",pname+" (New York)")}${tog("brent","var(--s3)","Rohöl Brent")}`;
+  $("mk-legend").querySelectorAll(".lg-toggle").forEach(b=>b.addEventListener("click",()=>{mkHidden[b.dataset.k]=!mkHidden[b.dataset.k];try{localStorage.setItem("spk-mk-hidden",JSON.stringify(mkHidden))}catch(e){}render();const n=$("mk-tog-"+b.dataset.k);if(n)n.focus()}));
   const rel=S.market_meta&&S.market_meta.eia_release;
   $("mk-source").innerHTML=S.demo?"Beispieldaten, keine echten Marktwerte.":
     `Rohöl und Großhandel: Source: U.S. Energy Information Administration${rel?" ("+new Date(rel+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+")":""}. Spot-Preise Europe Brent und New York Harbor, von der EIA bezogen von Refinitiv (LSEG). Wechselkurs: Europäische Zentralbank. Die EIA ergänzt ihre Werte wöchentlich, die letzten Tage fehlen daher meist.`;
@@ -290,7 +295,7 @@ function render(){
     const net=d=>d.lo/1.19-taxAt(fuel,d.t)-co2(fuel);
     const b0={n:net(mDays[0]),p:prodCt(fuel,mDays[0].t),b:brentEur(mDays[0].t)};
     lineChart($("ch-mk"),{x:[mDays[0].t,mDays[mDays.length-1].t],aria:"Indexvergleich",
-      series:[{name:"Brent",color:"var(--s3)",pts:mDays.map(d=>[d.t,brentEur(d.t)/b0.b*100])},{name:pname,color:"var(--s2)",pts:mDays.map(d=>[d.t,prodCt(fuel,d.t)/b0.p*100])},{name:"Zapfsäule ohne Steuern",color:"var(--s1)",pts:mDays.map(d=>[d.t,net(d)/b0.n*100]),end:true}],
+      series:[mkHidden.brent?null:{name:"Brent",color:"var(--s3)",pts:mDays.map(d=>[d.t,brentEur(d.t)/b0.b*100])},mkHidden.ws?null:{name:pname,color:"var(--s2)",pts:mDays.map(d=>[d.t,prodCt(fuel,d.t)/b0.p*100])},{name:"Zapfsäule ohne Steuern",color:"var(--s1)",pts:mDays.map(d=>[d.t,net(d)/b0.n*100]),end:true}].filter(Boolean),
       xTicks:mTicks,tol:DAY*.6,yFmt:v=>de(v,0),tipFmt:v=>de(v,1),xFmt:dm});
     if(mDays.length<40){$("ch-lag").innerHTML='<p class="small muted">Für die Verzögerungsanalyse werden mindestens 40 Tage gebraucht.</p>';["st-lag","st-r","st-rb"].forEach(i=>$(i).textContent="–");$("st-text").textContent=""}
     else{
