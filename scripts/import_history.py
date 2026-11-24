@@ -20,7 +20,7 @@ import os
 import sys
 from datetime import date, datetime, timedelta
 
-from common import euro_to_ct, http_get, load_config, read_events, write_events
+from common import BERLIN, euro_to_ct, http_get, load_config, read_events, write_events
 
 
 def parse_ts(s):
@@ -65,7 +65,7 @@ def main():
         n = int(sys.argv[sys.argv.index("--days") + 1])
         user, pw = os.environ.get("TK_HISTORY_USER"), os.environ.get("TK_HISTORY_PASS")
         for i in range(n, 0, -1):
-            d = date.today() - timedelta(days=i)
+            d = datetime.now(BERLIN).date() - timedelta(days=i)
             url = tpl.format(Y=f"{d:%Y}", m=f"{d:%m}", d=f"{d:%d}")
             try:
                 texts.append(http_get(url, user, pw, timeout=120).decode("utf-8"))
@@ -82,7 +82,7 @@ def main():
         if not day:
             continue
         tss = [t for items in day.values() for t, _ in items]
-        start = datetime.fromtimestamp(min(tss)).replace(hour=0, minute=0, second=0)
+        start = datetime.fromtimestamp(min(tss), BERLIN).replace(hour=0, minute=0, second=0)
         rng = [(int(start.timestamp()), int((start + timedelta(days=1)).timestamp()))]
         merge(ev, day, rng)
         total += sum(len(v) for v in day.values())

@@ -99,8 +99,11 @@ function forecast(F){
     for(let i=sNow+1;i<288;i++){const d=P.map(p=>at(p,i)-at(p,sNow));
       // Preise dürfen außer um 12 Uhr nicht steigen, Prognose daher nie über dem aktuellen Preis
       pts.push({t:STARTS[NCYC]+i*STEP*MIN,y:Math.min(last.best,last.best+q(d,.5)),lo:last.best+q(d,.1),hi:Math.min(last.best,last.best+q(d,.9))})}
+    // Um 12:00:00 haben meist noch nicht alle Tankstellen erhöht: bis zur üblichen Erhöhung gilt der bisherige Preis weiter
+    const lastFc=pts.length?pts[pts.length-1]:{y:last.best,lo:last.best,hi:last.best};
+    let rise=0;while(rise<24&&q(P.map(p=>at(p,rise)),.5)<-2)rise++;
     for(let i=0;i<=sNow+12&&i<288;i++){const d=P.map(p=>at(p,i));
-      pts.push({t:cycStart(1)+i*STEP*MIN,y:peak1+q(d,.5),lo:peak1+q(d,.1)-1.5,hi:peak1+q(d,.9)+1.5})}
+      pts.push(i<rise?{t:cycStart(1)+i*STEP*MIN,y:lastFc.y,lo:lastFc.lo,hi:lastFc.hi}:{t:cycStart(1)+i*STEP*MIN,y:peak1+q(d,.5),lo:peak1+q(d,.1)-1.5,hi:peak1+q(d,.9)+1.5})}
   }
   const full=F.daily.filter(d=>d.lo!=null);
   const lowNow=full.length?full[full.length-1].lo:last.best;

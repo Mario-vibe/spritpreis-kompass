@@ -6,6 +6,7 @@ import time
 import urllib.request
 from collections import defaultdict
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
@@ -14,6 +15,8 @@ DOCS = ROOT / "docs"
 CONFIG = ROOT / "config.json"
 TK_API = "https://creativecommons.tankerkoenig.de/json"
 USER_AGENT = "spritpreis-kompass/1.0"
+# Die 12-Uhr-Regel gilt nach deutscher Zeit, unabhängig davon, wo ein Skript läuft
+BERLIN = ZoneInfo("Europe/Berlin")
 
 
 def load_config():

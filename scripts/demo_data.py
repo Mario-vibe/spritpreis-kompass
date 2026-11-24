@@ -7,7 +7,7 @@ import random
 import time
 from datetime import date, datetime, timedelta
 
-from common import DOCS, load_config
+from common import BERLIN, DOCS, load_config
 
 STATIONS = [
     {"id": "demo-1", "name": "Freie Tankstelle", "street": "Am Moor 1", "place": "Beispielstadt", "km": 1.2, "off": 0},
@@ -25,7 +25,7 @@ def main():
     rnd = random.Random(42)
     now = int(time.time()) // 300 * 300
     days = cfg.get("days_on_page", 120)
-    today = date.fromtimestamp(now)
+    today = datetime.fromtimestamp(now, BERLIN).date()
     # Markt: Zufallspfad
     market, b, fx, cd, cg = [], 67.0, 1.16, 0.62, 0.45
     md = {}
@@ -49,7 +49,7 @@ def main():
         walk = 0.0
         for i in range(days + 2, -1, -1):
             d = today - timedelta(days=i)
-            noon = int(datetime(d.year, d.month, d.day, 12).timestamp())
+            noon = int(datetime(d.year, d.month, d.day, 12, tzinfo=BERLIN).timestamp())
             if noon > now:
                 continue
             lag = sum(w * md[d - timedelta(days=2 + j)][key] / 3.785 / md[d - timedelta(days=2 + j)]["usd_per_eur"] * 100
