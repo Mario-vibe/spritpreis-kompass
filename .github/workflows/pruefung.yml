@@ -7,12 +7,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
-          t(){ echo "== $1"; curl -s -m 30 -A "$UA" -o out.txt -w "HTTP %{http_code} %{size_download}B %{time_total}s\n" "$1" || echo "curl-Fehler $?"; curl -s --http1.1 -m 30 -A "$UA" -o out1.txt -w "  http1.1: HTTP %{http_code} %{size_download}B\n" "$1" || echo "  http1.1 curl-Fehler $?"; head -c 300 out.txt | tr '\n' ' '; echo; }
-          t "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DCOILBRENTEU"
-          t "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DDFUELNYH&cosd=2026-06-01"
-          t "https://query1.finance.yahoo.com/v8/finance/chart/BZ=F?range=5d&interval=1d"
-          t "https://query1.finance.yahoo.com/v8/finance/chart/HO=F?range=5d&interval=1d"
-          t "https://query2.finance.yahoo.com/v8/finance/chart/EURUSD=X?range=5d&interval=1d"
-          t "https://data-api.ecb.europa.eu/service/data/EXR/D.USD.EUR.SP00.A?lastNObservations=3&format=csvdata"
-          t "https://www.eia.gov/dnav/pet/hist/LeafHandler.ashx?n=PET&s=RBRTE&f=D"
+          for s in RBRTED EER_EPD2DXL0_PF4_Y35NY_DPGD EER_EPMRU_PF4_Y35NY_DPGD; do
+            echo "== $s"
+            curl -s -m 60 -o $s.htm -w "HTTP %{http_code} %{size_download}B\n" "https://www.eia.gov/dnav/pet/hist/$s.htm" || echo "curl-Fehler $?"
+            grep -o '<title>[^<]*' $s.htm | head -1
+            sed 's/<[^>]*>/ /g' $s.htm | tr -s ' \t\r' ' ' | grep -E "20(25|26) [A-Z][a-z]{2}-" | tail -3
+          done
