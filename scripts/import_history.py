@@ -55,7 +55,8 @@ def main():
     ids = {s["id"] for s in cfg["stations"]}
     fuels = cfg["fuels"]
     if not ids:
-        sys.exit("Noch keine Tankstellen in config.json.")
+        print("::notice::Noch keine Tankstellen in config.json, Import übersprungen.")
+        return
     texts = []
     if "--days" in sys.argv:
         tpl = os.environ.get("TK_HISTORY_URL")

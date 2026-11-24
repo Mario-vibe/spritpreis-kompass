@@ -1,0 +1,18 @@
+name: Pruefung Datenquellen (voruebergehend)
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
+          t(){ echo "== $1"; curl -s -m 30 -A "$UA" -o out.txt -w "HTTP %{http_code} %{size_download}B %{time_total}s\n" "$1"; head -c 300 out.txt | tr '\n' ' '; echo; }
+          t "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DCOILBRENTEU"
+          t "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DDFUELNYH&cosd=2026-06-01"
+          t "https://query1.finance.yahoo.com/v8/finance/chart/BZ=F?range=5d&interval=1d"
+          t "https://query1.finance.yahoo.com/v8/finance/chart/HO=F?range=5d&interval=1d"
+          t "https://query2.finance.yahoo.com/v8/finance/chart/EURUSD=X?range=5d&interval=1d"
+          t "https://data-api.ecb.europa.eu/service/data/EXR/D.USD.EUR.SP00.A?lastNObservations=3&format=csvdata"
+          t "https://www.eia.gov/dnav/pet/hist/LeafHandler.ashx?n=PET&s=RBRTE&f=D"
