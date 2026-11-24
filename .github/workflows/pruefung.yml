@@ -17,12 +17,7 @@ jobs:
               except Exception as e: return 'FEHLT '+str(e)
               s=re.sub(r'(?s)<script.*?</script>|<style.*?</style>','',s)
               return re.sub(r'\s+',' ',html.unescape(re.sub(r'<[^>]+>',' ',s)))
-          t=txt('tie.htm'); i=t.find('Daily Prices')
-          print('### TODAY IN ENERGY ###'); print(t[i:i+4000] if i>=0 else t[:3000])
-          s=txt('spt.htm'); print('### SPOT TABLE ###')
-          for k in ['Release Date','Next Release','Source','Thomson','Refinitiv','LSEG']:
-              for m in re.finditer(k,s): print('...',s[max(0,m.start()-150):m.start()+250])
-          c=txt('cpr.htm'); print('### COPYRIGHT ###')
-          for k in ['public domain','Thomson','Refinitiv','LSEG','proprietary','third part','copyrighted']:
-              for m in re.finditer(k,c,re.I): print('...',c[max(0,m.start()-250):m.start()+350])
+          c=txt('cpr.htm'); i=c.find('Public domain and use')
+          print('### COPYRIGHT ###'); print(c[i:i+3500])
+          s=txt('spt.htm'); print('### SPOT TAIL ###'); j=s.find('Release'); print(s[j-200:j+400] if j>=0 else s[-1500:])
           PY
