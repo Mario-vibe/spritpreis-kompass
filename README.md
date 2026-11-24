@@ -54,52 +54,6 @@ Wer sofort Monate an Vergangenheit möchte: Tankerkönig stellt alle Preisänder
 
 Dann **Marktdaten und Historie** mit `tage = 120` starten.
 
-## Tagesaktuelle Börsenkurse über den Raspberry Pi (optional)
-
-Die EIA ergänzt ihre Werte nur wöchentlich. Yahoo Finance hat tagesaktuelle Terminkurse,
-sperrt aber die Server von GitHub. Ein Raspberry Pi zu Hause kann sie stündlich holen und
-an GitHub schicken. Die Seite verlängert damit die EIA-Werte bis heute.
-
-**1. Schlüssel für GitHub erzeugen** (auf dem Pi):
-
-```bash
-ssh-keygen -t ed25519 -f ~/.ssh/spritpreis -N "" -C "spritpreis-pi"
-cat ~/.ssh/spritpreis.pub
-```
-
-**2. Schlüssel bei GitHub eintragen:** Repository → Settings → Deploy keys → Add deploy key.
-Titel `Raspberry Pi`, den Text aus Schritt 1 einfügen, **Allow write access** anhaken.
-Dieser Schlüssel gilt nur für dieses eine Repository.
-
-**3. Verbindung einrichten und Projekt holen:**
-
-```bash
-cat >> ~/.ssh/config <<'CFG'
-Host github-spritpreis
-  HostName github.com
-  User git
-  IdentityFile ~/.ssh/spritpreis
-  IdentitiesOnly yes
-CFG
-git clone git@github-spritpreis:Mario-vibe/spritpreis-kompass.git ~/spritpreis-kompass
-```
-
-**4. Einmal von Hand testen:**
-
-```bash
-~/spritpreis-kompass/pi/update.sh
-```
-
-Erwartet: `4/4 Kurse geladen …` und `hochgeladen`.
-
-**5. Stündlich automatisch:** `crontab -e` öffnen und diese Zeile anfügen:
-
-```
-17 * * * * $HOME/spritpreis-kompass/pi/update.sh >> $HOME/spritpreis.log 2>&1
-```
-
-Läuft der Pi einmal nicht, arbeitet die Seite einfach mit den EIA-Werten weiter.
-
 ## Gut zu wissen
 
 - **Öffentlich:** GitHub Pages ist für kostenlose Konten nur bei öffentlichen Repositories verfügbar. Die Seite und die Liste der Tankstellen sind damit für jeden einsehbar, der die Adresse kennt, und lassen Rückschlüsse auf die Wohngegend zu. Der API-Schlüssel bleibt geheim.
@@ -114,8 +68,6 @@ Läuft der Pi einmal nicht, arbeitet die Seite einfach mit den EIA-Werten weiter
 config.json                 Tankstellen, Kraftstoffe, Steuerwerte
 scripts/fetch_current.py    aktuelle Preise holen
 scripts/fetch_market.py     Rohöl, Großhandel (EIA), Wechselkurs (EZB) holen
-scripts/fetch_futures.py    tagesaktuelle Terminkurse von Yahoo (auf dem Pi)
-pi/update.sh                Abruf und Hochladen auf dem Pi
 scripts/import_history.py   historische Tankerkönig-Daten übernehmen
 scripts/find_stations.py    Tankstellen im Umkreis suchen
 scripts/build_site.py       docs/data/site.json erzeugen

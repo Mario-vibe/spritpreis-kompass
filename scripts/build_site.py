@@ -19,36 +19,6 @@ def read_csv(path):
     return out
 
 
-def combine_market(eia, fut):
-    """EIA-Werte (amtlich, aber bis zu eine Woche alt) mit den Terminkursen vom Pi bis heute verlängern.
-
-    Nach dem letzten EIA-Tag wird der EIA-Wert mit der prozentualen Veränderung des
-    Terminkurses fortgeschrieben. So bleibt das Niveau der EIA-Reihe erhalten.
-    """
-    rows = {d: dict(v) for d, v in eia.items()}
-    est = set()
-    for f in FIELDS:
-        eia_days = sorted(d for d, v in eia.items() if f in v)
-        fut_days = sorted(d for d, v in fut.items() if f in v)
-        if not fut_days:
-            continue
-        if not eia_days:  # z. B. EZB nicht erreichbar: Terminkurs direkt verwenden
-            for d in fut_days:
-                rows.setdefault(d, {})[f] = fut[d][f]
-            continue
-        last = eia_days[-1]
-        base = [d for d in fut_days if d <= last]
-        if not base:
-            continue
-        ratio = eia[last][f] / fut[base[-1]][f]
-        for d in fut_days:
-            if d > last:
-                rows.setdefault(d, {})[f] = round(fut[d][f] * ratio, 4)
-                est.add(d)
-    return [{"date": d, **{k: rows[d].get(k) for k in FIELDS}, **({"est": True} if d in est else {})}
-            for d in sorted(rows)]
-
-
 def main():
     cfg = load_config()
     if not cfg["stations"]:
@@ -67,7 +37,8 @@ def main():
             before = [e for e in items if e[0] < cutoff][-1:]  # Startwert am Rand
             per[fuel] = [[t, p] for t, p in before + [e for e in items if e[0] >= cutoff]]
         events[s["id"]] = per
-    market = combine_market(read_csv(DATA / "market.csv"), read_csv(DATA / "futures.csv"))[-(days + 30):]
+    mk = read_csv(DATA / "market.csv")
+    market = [{"date": d, **{k: mk[d].get(k) for k in FIELDS}} for d in sorted(mk)][-(days + 30):]
     site = {
         "generated": generated,
         "demo": False,
