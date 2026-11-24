@@ -8,7 +8,7 @@ jobs:
     steps:
       - run: |
           UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
-          t(){ echo "== $1"; curl -s -m 30 -A "$UA" -o out.txt -w "HTTP %{http_code} %{size_download}B %{time_total}s\n" "$1"; head -c 300 out.txt | tr '\n' ' '; echo; }
+          t(){ echo "== $1"; curl -s -m 30 -A "$UA" -o out.txt -w "HTTP %{http_code} %{size_download}B %{time_total}s\n" "$1" || echo "curl-Fehler $?"; curl -s --http1.1 -m 30 -A "$UA" -o out1.txt -w "  http1.1: HTTP %{http_code} %{size_download}B\n" "$1" || echo "  http1.1 curl-Fehler $?"; head -c 300 out.txt | tr '\n' ' '; echo; }
           t "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DCOILBRENTEU"
           t "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DDFUELNYH&cosd=2026-06-01"
           t "https://query1.finance.yahoo.com/v8/finance/chart/BZ=F?range=5d&interval=1d"
