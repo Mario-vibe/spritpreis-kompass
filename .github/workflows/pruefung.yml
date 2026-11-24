@@ -7,9 +7,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          for s in RBRTED EER_EPD2DXL0_PF4_Y35NY_DPGD EER_EPMRU_PF4_Y35NY_DPGD; do
-            echo "== $s"
-            curl -s -m 60 -o $s.htm -w "HTTP %{http_code} %{size_download}B\n" "https://www.eia.gov/dnav/pet/hist/$s.htm" || echo "curl-Fehler $?"
-            grep -o '<title>[^<]*' $s.htm | head -1
-            sed 's/<[^>]*>/ /g' $s.htm | tr -s ' \t\r' ' ' | grep -E "20(25|26) [A-Z][a-z]{2}-" | tail -3
-          done
+          curl -s -m 60 -o b.htm "https://www.eia.gov/dnav/pet/hist/RBRTED.htm" || true
+          python3 - <<'PY'
+          s=open('b.htm',encoding='latin-1').read()
+          i=s.rfind('<tr>',0,s.rfind('</table>',0,s.rfind('B3')+5000))
+          print(repr(s[i-1500:i+700]))
+          PY
