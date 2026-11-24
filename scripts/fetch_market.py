@@ -12,6 +12,7 @@ FRED und Yahoo Finance sperren die Server von GitHub und werden deshalb nicht ge
 """
 import csv
 import io
+import json
 import re
 from datetime import date, timedelta
 
@@ -28,6 +29,8 @@ MONTHS = {m: i for i, m in enumerate(
     ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], 1)}
 ROW = re.compile(r"<td class='B6'>(?:&nbsp;)*\s*(\d{4}) (\w{3})-\s*(\d+) to [^<]*</td>((?:\s*<td class='B3'>[^<]*</td>){5})")
 CELL = re.compile(r"<td class='B3'>([^<]*)</td>")
+RELEASE = re.compile(r"Release Date:\s*(\d{1,2})/(\d{1,2})/(\d{4})")
+release_dates = []  # Veröffentlichungsdaten der EIA, für die vorgeschriebene Quellenangabe
 
 
 def parse_eia(html):
@@ -48,6 +51,9 @@ def parse_eia(html):
 def load_eia(series_id):
     html = http_get(f"https://www.eia.gov/dnav/pet/hist/{series_id}.htm", timeout=60).decode("latin-1")
     values = parse_eia(html)
+    m = RELEASE.search(html)
+    if m:
+        release_dates.append(date(int(m.group(3)), int(m.group(1)), int(m.group(2))).isoformat())
     if not values:
         raise ValueError("Tabelle nicht gefunden, die Seite hat sich womöglich geändert")
     return values
@@ -94,6 +100,8 @@ def main():
         w.writerow(["date", *COLUMNS])
         for d in dates:
             w.writerow([d, *[cols[n].get(d, "") for n in COLUMNS]])
+    if release_dates:  # nur bei erfolgreichem Abruf aktualisieren
+        (DATA / "market_meta.json").write_text(json.dumps({"eia_release": max(release_dates)}) + "\n", encoding="utf-8")
     last = {n: max(cols[n]) if cols[n] else "-" for n in COLUMNS}
     print(f"{len(dates)} Tage Marktdaten gespeichert. Letzte Werte: {last}."
           + (f" Nicht erreichbar: {', '.join(failed)}." if failed else ""))

@@ -39,6 +39,8 @@ def main():
         events[s["id"]] = per
     mk = read_csv(DATA / "market.csv")
     market = [{"date": d, **{k: mk[d].get(k) for k in FIELDS}} for d in sorted(mk)][-(days + 30):]
+    meta_path = DATA / "market_meta.json"
+    market_meta = json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.exists() else {}
     site = {
         "generated": generated,
         "demo": False,
@@ -48,6 +50,7 @@ def main():
         "tax": cfg["tax"],
         "events": events,
         "market": market,
+        "market_meta": market_meta,
     }
     (DOCS / "data").mkdir(parents=True, exist_ok=True)
     with open(DOCS / "data" / "site.json", "w", encoding="utf-8") as f:

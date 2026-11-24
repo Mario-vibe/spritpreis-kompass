@@ -279,6 +279,9 @@ function render(){
   $("mk-title").textContent=`Zapfsäule, ${pname} und Rohöl im Vergleich`;
   $("mk-sub").textContent=`Damit Steueränderungen wie der Tankrabatt das Bild nicht verzerren, zeigt die blaue Linie den Zapfsäulenpreis ohne Mehrwertsteuer, Energiesteuer und CO₂-Preis, also Produktkosten plus Marge.`;
   $("mk-legend").innerHTML=`<span><i class="sw" style="background:var(--s1)"></i>Zapfsäule ohne Steuern und Abgaben</span><span><i class="sw" style="background:var(--s2)"></i>${pname} (New York)</span><span><i class="sw" style="background:var(--s3)"></i>Rohöl Brent</span>`;
+  const rel=S.market_meta&&S.market_meta.eia_release;
+  $("mk-source").innerHTML=S.demo?"Beispieldaten, keine echten Marktwerte.":
+    `Rohöl und Großhandel: Source: U.S. Energy Information Administration${rel?" ("+new Date(rel+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+")":""}. Spot-Preise Europe Brent und New York Harbor, von der EIA bezogen von Refinitiv (LSEG). Wechselkurs: Europäische Zentralbank. Die EIA ergänzt ihre Werte wöchentlich, die letzten Tage fehlen daher meist.`;
   const mDays=hist.filter(d=>prodCt(fuel,d.t)!=null&&brentEur(d.t)!=null);
   if(!hasMarket||mDays.length<10){
     $("ch-mk").innerHTML='<p class="small muted">Noch zu wenig Tage mit Preisen und Marktdaten. Das Diagramm erscheint nach etwa zwei Wochen.</p>';
