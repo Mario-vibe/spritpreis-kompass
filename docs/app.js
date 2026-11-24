@@ -244,7 +244,7 @@ function render(){
   const meas=F.series.filter(p=>p.t>=from).map(p=>[p.t,p.best]);
   const fpts=fc?fc.pts.filter(p=>p.t<=to):[];
   const ticks=[];for(let t=cycStart(-3);t<=to;t+=12*HOUR){const d=new Date(t);ticks.push({v:t,label:d.getHours()===12?"12 Uhr":wd(t)+" 0 Uhr"})}
-  const vl=[-2,-1,0,1].map(k=>({x:cycStart(k)}));vl.push({x:now.getTime(),label:"jetzt",strong:true});
+  const vl=[-2,-1,0,1].map(k=>({x:cycStart(k)}));vl.push({x:now.getTime(),label:"Stand "+hm(now),strong:true});
   lineChart($("ch-48"),{x:[from,to],aria:"Preisverlauf 48 Stunden und Prognose",stepTip:true,
     series:[{name:"gemessen",color:"var(--s1)",pts:meas,step:true,end:true},{name:"Prognose",color:"var(--s1)",pts:fpts.length?[[last.t,last.best]].concat(fpts.map(p=>[p.t,p.y])):[],step:true,dash:true}],
     bands:[{pts:fpts.map(p=>[p.t,p.lo,p.hi])}],vlines:vl,xTicks:ticks,tol:10*MIN,
