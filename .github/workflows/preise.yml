@@ -38,6 +38,10 @@ jobs:
             git pull -q --rebase && git push -q
           fi
 
+      # Versionskennung anhängen, damit Browser nach Änderungen nicht die alte app.js aus dem Zwischenspeicher nehmen
+      - name: Versionskennung setzen
+        run: sed -i "s#src=\"app.js\"#src=\"app.js?v=${GITHUB_SHA::8}-${GITHUB_RUN_ID}\"#" docs/index.html
+
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:
