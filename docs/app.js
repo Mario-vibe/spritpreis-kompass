@@ -39,8 +39,13 @@ const co2=fuel=>TAX.co2_ct[fuel]||0;
 
 /* ---------- Markt (Tageswerte, Lücken mit Vortag gefüllt) ---------- */
 const dayKey=t=>{const d=new Date(t);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
-const MK={};let lastMk=null;
-(S.market||[]).forEach(r=>{if(r.usd_per_eur)MK[r.date]=r});
+// Jede Größe einzeln mit dem letzten bekannten Wert füllen (höchstens 4 Tage), weil EIA und EZB unterschiedliche Feiertage haben
+const MK={};
+(function(){const F=["brent_usd_bbl","diesel_usd_gal","gasoline_usd_gal","usd_per_eur"];const last={},lastD={};
+  const rows=(S.market||[]).slice().sort((a,b)=>a.date<b.date?-1:1);
+  rows.forEach(r=>{const t=new Date(r.date+"T12:00:00").getTime();const o={date:r.date};
+    F.forEach(f=>{if(r[f]!=null){last[f]=r[f];lastD[f]=t}o[f]=last[f]!=null&&t-lastD[f]<=4*DAY?last[f]:null});
+    if(o.usd_per_eur)MK[r.date]=o})})();
 const mkDates=Object.keys(MK).sort();
 function mkAt(t){const key=dayKey(t);let best=null;for(const d of mkDates){if(d<=key)best=MK[d];else break}return best}
 const hasMarket=mkDates.length>20;

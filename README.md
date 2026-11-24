@@ -9,7 +9,7 @@ Alles läuft kostenlos bei GitHub. Ein eigenes Gerät oder ein Server ist nicht 
 | Was | Wann | Woher |
 |---|---|---|
 | Aktuelle Preise der eigenen Tankstellen | alle 10 Minuten | Tankerkönig-API (Markttransparenzstelle) |
-| Rohöl, Großhandel, Euro-Dollar-Kurs | täglich früh | FRED (Federal Reserve Bank of St. Louis) |
+| Rohöl, Großhandel, Euro-Dollar-Kurs | täglich früh | US-Energiebehörde EIA (wöchentlich ergänzt) und Europäische Zentralbank |
 | Historische Preise (optional) | täglich früh | Tankerkönig-Datenbestand |
 
 Gespeichert werden nur Preisänderungen, als CSV-Dateien im Ordner `data/`. Die Seite liegt in `docs/` und wird nach jedem Abruf neu veröffentlicht.
