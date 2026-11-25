@@ -236,7 +236,8 @@
       "home": "mama",
       "max_km": 4,
       "exclude": [
-        "820d5015-a497-4f26-9bc8-94ffce14a31f"
+        "820d5015-a497-4f26-9bc8-94ffce14a31f",
+        "6566bc9f-7d4e-545d-a4bd-db18f3b9705b"
       ]
     }
   ],

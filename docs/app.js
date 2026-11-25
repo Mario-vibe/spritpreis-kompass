@@ -229,6 +229,7 @@ function verdict(F,fc){
 
 /* ---------- Seite füllen ---------- */
 let fuel=fuels[0];
+let tblAll=false; // Tabelle: bei Mamas Kraftstoff alle Tankstellen zeigen statt nur ihre
 let mkHidden={ws:false,brent:false};
 try{const h=JSON.parse(localStorage.getItem("spk-mk-hidden")||"{}");mkHidden={ws:!!h.ws,brent:!!h.brent}}catch(e){}
 try{const f=localStorage.getItem("spk-fuel");if(fuels.includes(f))fuel=f}catch(e){}
@@ -275,13 +276,19 @@ function render(){
     return `<td class="gain calc ${t.net>=MIN_GAIN?"pos":t.net<=-MIN_GAIN?"neg":"flat"}" tabindex="0" data-calc="${esc(JSON.stringify(c))}">${Math.abs(t.net)<MIN_GAIN?"lohnt kaum":eur2(t.net)}</td>`};
   $("tbl-head").innerHTML="<th>Tankstelle</th><th>km</th><th>jetzt</th><th>ggü. gestern</th><th>seit 12 Uhr</th>"+VEH.map(v=>`<th title="Ersparnis je Tankfüllung (${v.fill_l} l) abzüglich Umweg, ${de(v.l_per_100km,0)} l/100 km">${esc(v.name)}</th>`).join("");
   const nCols=5+VEH.length;
+  // Gehört der Kraftstoff nur zu Fahrzeugen mit eigenem Wohnort (Mama), zeigt die Tabelle nur deren Tankstellen
+  const personal=VEH.length>0&&VEH.every(v=>v.home);
+  const shown=personal&&!tblAll?rows.filter(o=>VEH.some(v=>C.inRange(o,v))):rows;
   // Sortierung: Preis aufsteigend, bei gleichem Preis die nähere zuerst; Tankstellen ohne Preis ans Ende, ebenfalls nach Entfernung
-  $("tbl").innerHTML=rows.slice().sort((a,b)=>((a.p??1e9)-(b.p??1e9))||(KM[a.i]-KM[b.i])).map(o=>{
+  $("tbl").innerHTML=shown.slice().sort((a,b)=>((a.p??1e9)-(b.p??1e9))||(KM[a.i]-KM[b.i])).map(o=>{
     const addr=`<div class="small muted">${esc([o.x.street,o.x.place].filter(Boolean).join(", "))}${o.x.unterwegs?" · unterwegs":""}</div>`;
     if(o.p==null)return `<tr><td>${esc(o.x.name)}${addr}</td><td class="num">${o.x.km!=null?de(o.x.km,1):""}</td><td class="muted" colspan="${nCols-2}">geschlossen oder kein Preis</td></tr>`;
     const yp=s.yRow?s.yRow.st[o.i]:null;const d=yp!=null?o.p-yp:null;
     const peak=Math.max(...today.map(p=>p.st[o.i]).filter(v=>v!=null),o.p);const fell=peak-o.p;
     return `<tr class="${o.i===last.bi?"best":""}"><td>${esc(o.x.name)}${o.i===last.bi?'<span class="tag">günstigste</span>':""}${addr}</td><td class="num">${o.x.km!=null?de(o.x.km,1):""}</td><td class="p">${priceHTML(o.p)}</td><td class="num ${d==null?"":cls(d)}">${d==null?"–":sgn(d)}</td><td class="num muted">${fell>0.05?"−"+de(fell,0)+" ct":"noch keine Senkung"}</td>${VEH.map(v=>gainCell(o,v)).join("")}</tr>`}).join("");
+  const allBtn=$("tbl-all");
+  if(personal){allBtn.hidden=false;allBtn.textContent=tblAll?`Nur ${VEH.map(v=>v.name).join(" und ")}s Tankstellen zeigen`:`Alle ${rows.length} Tankstellen zeigen`;allBtn.setAttribute("aria-pressed",tblAll)}
+  else allBtn.hidden=true;
   // Empfehlung über der Tabelle
   const hint=$("tbl-hint"),note=$("tbl-note");
   if(VEH.length){
@@ -445,6 +452,7 @@ tblBody.addEventListener("click",e=>{const td=e.target.closest("td.calc");if(!td
 document.addEventListener("click",hideCalc);
 document.addEventListener("keydown",e=>{if(e.key==="Escape")hideCalc()});
 window.addEventListener("scroll",()=>{if(calcFor)showCalc(calcFor)},{passive:true});
+$("tbl-all").addEventListener("click",()=>{tblAll=!tblAll;render()});
 document.querySelectorAll("#seg button").forEach(b=>b.addEventListener("click",()=>{fuel=b.dataset.fuel;try{localStorage.setItem("spk-fuel",fuel)}catch(e){}render()}));
 $("mama-copy").addEventListener("click",e=>{const b=e.currentTarget;
   const done=t=>{b.textContent=t;setTimeout(()=>b.textContent="Nachricht kopieren",2500)};
