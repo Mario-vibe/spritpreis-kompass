@@ -59,6 +59,7 @@ function lagProd(fuel,t){let s=0;for(let i=0;i<5;i++){const v=prodCt(fuel,Math.m
 function marketShift(fuel,k){if(!hasMarket)return 0;const a=lagProd(fuel,cycStart(0)),b=lagProd(fuel,cycStart(k));return a==null||b==null?0:0.8*1.19*(b-a)}
 
 /* ---------- Preisraster in 5-Minuten-Schritten ---------- */
+const KM=S.stations.map(x=>x.km!=null?x.km:1e9);
 const STARTS=[];for(let k=-NCYC;k<=FUT+1;k++)STARTS.push(cycStart(k));
 function buildFuel(fuel){
   const ev=S.stations.map(s=>(S.events[s.id]&&S.events[s.id][fuel])||[]);
@@ -70,7 +71,8 @@ function buildFuel(fuel){
     const ts=t/1000;
     const vals=ev.map((e,i)=>{while(ptr[i]<e.length&&e[ptr[i]][0]<=ts){cur[i]=e[ptr[i]][1];ptr[i]++}return cur[i]});
     while(STARTS[ci+1]<=t)ci++;
-    let bi=-1;vals.forEach((v,i)=>{if(v!=null&&(bi<0||v<vals[bi]))bi=i});
+    // Bei gleichem Preis gewinnt die nähere Tankstelle (ohne Entfernung zählt sie als am weitesten weg)
+    let bi=-1;vals.forEach((v,i)=>{if(v==null)return;if(bi<0||v<vals[bi]-0.01||(Math.abs(v-vals[bi])<=0.01&&KM[i]<KM[bi]))bi=i});
     if(bi<0)continue;
     series.push({t,k:ci-NCYC,m:Math.round((t-STARTS[ci])/MIN),st:vals,best:vals[bi],bi});
   }
@@ -249,10 +251,12 @@ function render(){
     const save=v.fill_l*(ref.p-o.p)/100, liters=extra*v.l_per_100km/100, cost=liters*o.p/100;
     return {net:save-cost,save,extra,liters,cost}};
   const eur2=x=>(x>=0?"+":"−")+de(Math.abs(x),2)+" €";
-  const gainCell=(o,v)=>{if(ref&&o.i===ref.i)return `<td class="gain flat" title="Bezug: nächstgelegene geöffnete Tankstelle">Bezug</td>`;
+  const gainCell=(o,v)=>{
+    if(ref&&o.i===ref.i)return `<td class="gain flat calc" tabindex="0" data-calc="${esc(JSON.stringify({ref:1,v:v.name,st:o.x.name+" "+(o.x.place||"")}))}">Bezug</td>`;
     const t=trip(o,v);if(!t)return `<td class="gain flat">–</td>`;
-    const tip=`${v.name}: ${v.fill_l} l × ${de((ref.p-o.p),1)} ct = ${eur2(t.save)}`+(t.extra?`, Umweg ${de(t.extra,0)} km ≈ ${de(t.liters,1)} l = −${de(t.cost,2)} €`:", ohne Umweg");
-    return `<td class="gain ${t.net>=0.5?"pos":t.net<=-0.5?"neg":"flat"}" title="${esc(tip)}">${Math.abs(t.net)<0.5?"lohnt kaum":eur2(t.net)}</td>`};
+    const c={v:v.name,st:o.x.name+" "+(o.x.place||""),fill:v.fill_l,diff:ref.p-o.p,save:t.save,way:!!o.x.unterwegs,
+      kmS:o.x.km,kmR:ref.x.km,rf:RF,extra:t.extra,l100:v.l_per_100km,liters:t.liters,price:o.p,cost:t.cost,net:t.net,refSt:ref.x.name+" "+(ref.x.place||"")};
+    return `<td class="gain calc ${t.net>=0.5?"pos":t.net<=-0.5?"neg":"flat"}" tabindex="0" data-calc="${esc(JSON.stringify(c))}">${Math.abs(t.net)<0.5?"lohnt kaum":eur2(t.net)}</td>`};
   $("tbl-head").innerHTML="<th>Tankstelle</th><th>km</th><th>jetzt</th><th>ggü. gestern</th><th>seit 12 Uhr</th>"+VEH.map(v=>`<th title="Ersparnis je Tankfüllung (${v.fill_l} l) abzüglich Umweg, ${de(v.l_per_100km,0)} l/100 km">${esc(v.name)}</th>`).join("");
   const nCols=5+VEH.length;
   $("tbl").innerHTML=rows.slice().sort((a,b)=>(a.p??1e9)-(b.p??1e9)).map(o=>{
@@ -355,6 +359,41 @@ function render(){
     window.__mama=`Hallo Mama, Super E10 kostet gerade ${priceTxt(el.best)} bei ${where}. Das ist ${good?"günstig":"ein normaler Preis"} im Vergleich zum letzten Monat. Am günstigsten ist es meist kurz vor 12 Uhr.`+(inRabatt(now.getTime())&&dLeft<=21?` Vor dem ${dm(RE)} volltanken, danach wird es rund ${de(cutGross,0)} Cent teurer.`:"");
   }
 }
+/* ---------- Info-Fenster mit der Rechnung "lohnt die Fahrt?" ---------- */
+const calcTip=document.createElement("div");calcTip.className="calc-tip";calcTip.hidden=true;calcTip.setAttribute("role","tooltip");document.body.appendChild(calcTip);
+let calcFor=null;
+function calcHTML(c){
+  if(c.ref)return `<div class="ct-title">${esc(c.v)} · ${esc(c.st)}</div><p>Das ist die nächstgelegene geöffnete Tankstelle. Alle anderen werden mit ihr verglichen.</p>`;
+  const e=x=>de(Math.abs(x),2)+" €";
+  const row=(k,v,cl="")=>`<div class="ct-row ${cl}"><span>${k}</span><span>${v}</span></div>`;
+  let h=`<div class="ct-title">${esc(c.v)} · ${esc(c.st)}</div><div class="ct-sub">im Vergleich zu ${esc(c.refSt)}</div>`;
+  h+=row(`Ersparnis: ${de(c.fill,0)} l × ${de(c.diff,1)} ct`,(c.save>=0?"+":"−")+e(c.save),c.save>=0?"pos":"neg");
+  if(c.way)h+=row("Umweg: keiner, liegt unterwegs","0,00 €");
+  else{
+    h+=`<div class="ct-calc">Umweg: 2 × (${de(c.kmS,1)} − ${de(c.kmR,1)}) km × ${de(c.rf,1)} ≈ ${de(c.extra,0)} km<br>Verbrauch: ${de(c.extra,0)} km × ${de(c.l100,0)} l/100 km ≈ ${de(c.liters,1)} l</div>`;
+    h+=row(`Kraftstoff für Umweg: ${de(c.liters,1)} l × ${de(c.price/100,3)} €`,"−"+e(c.cost),"neg");
+  }
+  h+=`<div class="ct-row ct-sum ${c.net>=0.5?"pos":c.net<=-0.5?"neg":""}"><span>Ergebnis je Tankfüllung</span><span>${c.net>=0?"+":"−"}${e(c.net)}</span></div>`;
+  return h;
+}
+function showCalc(td){
+  let c;try{c=JSON.parse(td.dataset.calc)}catch(e){return}
+  calcTip.innerHTML=calcHTML(c);calcTip.hidden=false;calcFor=td;
+  const r=td.getBoundingClientRect(),w=calcTip.offsetWidth,h=calcTip.offsetHeight,vw=document.documentElement.clientWidth;
+  let left=Math.min(Math.max(8,r.right-w),vw-w-8);let top=r.bottom+6;
+  if(top+h>window.innerHeight-8&&r.top-h-6>8)top=r.top-h-6;
+  calcTip.style.left=(left+window.scrollX)+"px";calcTip.style.top=(top+window.scrollY)+"px";
+}
+function hideCalc(){calcTip.hidden=true;calcFor=null}
+const tblBody=$("tbl");
+tblBody.addEventListener("mouseover",e=>{const td=e.target.closest("td.calc");if(td&&td!==calcFor)showCalc(td)});
+tblBody.addEventListener("mouseleave",hideCalc);
+tblBody.addEventListener("focusin",e=>{const td=e.target.closest("td.calc");if(td)showCalc(td)});
+tblBody.addEventListener("focusout",hideCalc);
+tblBody.addEventListener("click",e=>{const td=e.target.closest("td.calc");if(!td)return;if(td===calcFor)hideCalc();else showCalc(td);e.stopPropagation()});
+document.addEventListener("click",hideCalc);
+document.addEventListener("keydown",e=>{if(e.key==="Escape")hideCalc()});
+window.addEventListener("scroll",()=>{if(calcFor)showCalc(calcFor)},{passive:true});
 document.querySelectorAll("#seg button").forEach(b=>b.addEventListener("click",()=>{fuel=b.dataset.fuel;try{localStorage.setItem("spk-fuel",fuel)}catch(e){}render()}));
 $("mama-copy").addEventListener("click",e=>{const b=e.currentTarget;
   const done=t=>{b.textContent=t;setTimeout(()=>b.textContent="Nachricht kopieren",2500)};
