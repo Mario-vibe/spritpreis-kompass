@@ -74,6 +74,8 @@ def main():
     (DOCS / "data").mkdir(parents=True, exist_ok=True)
     with open(DOCS / "data" / "site.json", "w", encoding="utf-8") as f:
         json.dump(site, f, separators=(",", ":"))
+    with open(DOCS / "data" / "stamp.json", "w", encoding="utf-8") as f:
+        json.dump({"generated": now}, f)
     print("Beispieldaten geschrieben.")
 
 

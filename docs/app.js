@@ -489,7 +489,9 @@ let rt;window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(rend
 let checking=false;
 async function checkUpdate(){
   if(checking)return;checking=true;
-  try{const r=await fetch("data/site.json?t="+Date.now(),{cache:"no-store"});
+  try{// zuerst die winzige Zeitstempel-Datei (ca. 30 Bytes), nur falls sie fehlt die ganze Preisdatei
+    let r=await fetch("data/stamp.json?t="+Date.now(),{cache:"no-store"});
+    if(!r.ok)r=await fetch("data/site.json?t="+Date.now(),{cache:"no-store"});
     if(r.ok){const n=await r.json();if(n.generated!==S.generated){location.reload();return}}
   }catch(e){}
   checking=false;

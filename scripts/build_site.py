@@ -57,6 +57,9 @@ def main():
     (DOCS / "data").mkdir(parents=True, exist_ok=True)
     with open(DOCS / "data" / "site.json", "w", encoding="utf-8") as f:
         json.dump(site, f, ensure_ascii=False, separators=(",", ":"))
+    # Winzige Datei nur mit dem Zeitstempel: Die Seite prüft damit, ob es Neues gibt, ohne alle Daten zu laden
+    with open(DOCS / "data" / "stamp.json", "w", encoding="utf-8") as f:
+        json.dump({"generated": generated}, f)
     print(f"site.json geschrieben: {len(cfg['stations'])} Tankstellen, {len(market)} Markttage.")
 
 
