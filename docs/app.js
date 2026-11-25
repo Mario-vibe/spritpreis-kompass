@@ -244,6 +244,7 @@ function render(){
   // je Tankfüllung minus Kraftstoff für den Umweg (hin und zurück, Luftlinie × Straßenfaktor).
   // Tankstellen mit "unterwegs" liegen auf einer Strecke, die man ohnehin fährt: kein Umweg.
   const VEH=(S.vehicles||[]).filter(v=>v.fuel===fuel), RF=S.road_factor||1.3;
+  const MIN_GAIN=0.5; // ab diesem Gewinn je Tankfüllung (€) gilt ein Umweg als lohnend, überall gleich
   const near=rows.filter(o=>o.p!=null&&o.x.km!=null&&!o.x.unterwegs);
   const ref=near.length?near.reduce((a,o)=>o.x.km<a.x.km?o:a):null;
   const trip=(o,v)=>{if(!ref||o.p==null||(o.x.km==null&&!o.x.unterwegs))return null;
@@ -257,7 +258,7 @@ function render(){
     const t=trip(o,v);if(!t)return `<td class="gain flat">–</td>`;
     const c={v:v.name,st:o.x.name+" "+(o.x.place||""),fill:v.fill_l,diff:ref.p-o.p,save:t.save,way:!!o.x.unterwegs,
       kmS:o.x.km,kmR:ref.x.km,rf:RF,extra:t.extra,l100:v.l_per_100km,liters:t.liters,price:o.p,cost:t.cost,net:t.net,refSt:ref.x.name+" "+(ref.x.place||"")};
-    return `<td class="gain calc ${t.net>=0.5?"pos":t.net<=-0.5?"neg":"flat"}" tabindex="0" data-calc="${esc(JSON.stringify(c))}">${Math.abs(t.net)<0.5?"lohnt kaum":eur2(t.net)}</td>`};
+    return `<td class="gain calc ${t.net>=0.5?"pos":t.net<=-0.5?"neg":"flat"}" tabindex="0" data-calc="${esc(JSON.stringify(c))}">${Math.abs(t.net)<MIN_GAIN?"lohnt kaum":eur2(t.net)}</td>`};
   $("tbl-head").innerHTML="<th>Tankstelle</th><th>km</th><th>jetzt</th><th>ggü. gestern</th><th>seit 12 Uhr</th>"+VEH.map(v=>`<th title="Ersparnis je Tankfüllung (${v.fill_l} l) abzüglich Umweg, ${de(v.l_per_100km,0)} l/100 km">${esc(v.name)}</th>`).join("");
   const nCols=5+VEH.length;
   // Sortierung: Preis aufsteigend, bei gleichem Preis die nähere zuerst; Tankstellen ohne Preis ans Ende, ebenfalls nach Entfernung
@@ -273,7 +274,8 @@ function render(){
     const lines=VEH.map(v=>{
       const c=rows.filter(o=>o.i!==ref.i&&!o.x.unterwegs).map(o=>({o,t:trip(o,v)})).filter(z=>z.t).sort((a,b)=>b.t.net-a.t.net)[0];
       const refTxt=`${esc(ref.x.name)} ${esc(ref.x.place||"")} (${de(ref.x.km,1)} km)`;
-      if(!c||c.t.net<0.5)return `<div><b>${esc(v.name)}:</b> Kein Umweg lohnt sich gerade, am besten bei ${refTxt}.</div>`;
+      if(c&&c.t.net>0.05&&c.t.net<MIN_GAIN)return `<div><b>${esc(v.name)}:</b> Am besten bei ${refTxt}. Die Fahrt zu ${esc(c.o.x.name)} ${esc(c.o.x.place||"")} brächte nur ${eur2(c.t.net)} je Tankfüllung, das lohnt kaum.</div>`;
+      if(!c||c.t.net<MIN_GAIN)return `<div><b>${esc(v.name)}:</b> Kein Umweg lohnt sich gerade, am besten bei ${refTxt}.</div>`;
       return `<div><b>${esc(v.name)}:</b> Fahrt zu ${esc(c.o.x.name)} ${esc(c.o.x.place||"")} lohnt sich, <b>${eur2(c.t.net)}</b> je Tankfüllung (${v.fill_l} l) gegenüber ${refTxt}, Umweg etwa ${de(c.t.extra,0)} km.</div>`});
     const way=rows.filter(o=>o.x.unterwegs&&o.p!=null&&ref.p-o.p>=1).map(o=>`${esc(o.x.name)} ${esc(o.x.place||"")} ${de(ref.p-o.p,0)} ct`);
     if(way.length)lines.push(`<div><b>Unterwegs günstiger:</b> ${way.join(", ")} unter ${esc(ref.x.name)} ${esc(ref.x.place||"")}.</div>`);
@@ -286,7 +288,9 @@ function render(){
   const cand=rows.filter(o=>o.p!=null&&o.x.km!=null&&!o.x.unterwegs);
   if(VEH.length&&ref&&cand.length){
     const picks=VEH.map(v=>{const b=cand.map(o=>({o,t:o.i===ref.i?{net:0}:trip(o,v)})).filter(z=>z.t)
-      .sort((a,b)=>(b.t.net-a.t.net)||(KM[a.o.i]-KM[b.o.i]))[0];return {v,o:b.o,net:b.t.net}});
+      .sort((a,b)=>(b.t.net-a.t.net)||(KM[a.o.i]-KM[b.o.i]))[0];
+      // gleiche Schwelle wie in der Empfehlung über der Tabelle: kleiner Gewinn zählt nicht
+      return b.o.i!==ref.i&&b.t.net<MIN_GAIN?{v,o:ref,net:0}:{v,o:b.o,net:b.t.net}});
     const groups=[];picks.forEach(p=>{const g=groups.find(g=>g.o.i===p.o.i);if(g)g.ps.push(p);else groups.push({o:p.o,ps:[p]})});
     const names=a=>a.map(p=>esc(p.v.name)).join(" und ");
     const cheap=rows.find(o=>o.i===last.bi);
@@ -296,10 +300,12 @@ function render(){
       smart.innerHTML=`<hr class="p-sep"><span class="lbl">Sinnvollste Tankstelle mit Fahrtkosten</span>`+groups.map(g=>{
         const x=g.o.x;
         const same=g.o.i===last.bi;
-        const vs=same?"":g.ps.map(p=>{const tc=cheap.x.unterwegs?null:trip(cheap,p.v);return tc?`${esc(p.v.name)} <b>${eur2(p.net-tc.net)}</b>`:""}).filter(Boolean).join(", ");
+        const pre=p=>g.ps.length>1?esc(p.v.name)+": ":"";
+        const vs=same?"":g.ps.map(p=>{const tc=cheap.x.unterwegs?null:trip(cheap,p.v);if(!tc)return "";const d=p.net-tc.net;
+          return d>=0?`${pre(p)}<b>${eur2(d)}</b> je Tankfüllung gegenüber der Fahrt zur günstigsten`:`${pre(p)}Die Fahrt zur günstigsten brächte nur ${eur2(-d)} je Tankfüllung, das lohnt kaum`}).filter(Boolean).join(". ");
         return `<div class="price second">${priceHTML(g.o.p)}<span style="font-size:.4em"> €</span></div>
           <div class="where">${esc([x.name,[x.street,x.place].filter(Boolean).join(", "),x.km!=null?de(x.km,1)+" km":""].filter(Boolean).join(" · "))}</div>
-          <div class="p-note">für ${names(g.ps)}${same?", zugleich die günstigste":vs?` · gegenüber der Fahrt zur günstigsten je Tankfüllung: ${vs}`:""}</div>`}).join(`<hr class="p-sep">`);
+          <div class="p-note">für ${names(g.ps)}${same?", zugleich die günstigste":vs?`. ${vs}.`:""}</div>`}).join(`<hr class="p-sep">`);
     }
     smart.hidden=false;
   }else smart.hidden=true;
