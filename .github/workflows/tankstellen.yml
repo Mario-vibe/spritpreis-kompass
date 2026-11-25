@@ -27,6 +27,13 @@ jobs:
   suchen:
     runs-on: ubuntu-latest
     steps:
+      # Koordinaten zuerst unkenntlich machen, direkt aus den Ereignisdaten gelesen,
+      # damit sie in keinem Protokoll im Klartext erscheinen
+      - name: Koordinaten in Protokollen unkenntlich machen
+        run: |
+          echo "::add-mask::$(jq -r '.inputs.breite' "$GITHUB_EVENT_PATH")"
+          echo "::add-mask::$(jq -r '.inputs.laenge' "$GITHUB_EVENT_PATH")"
+
       - uses: actions/checkout@v7
 
       - name: Tankstellen im Umkreis suchen
