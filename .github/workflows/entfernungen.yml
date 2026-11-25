@@ -10,7 +10,7 @@ on:
         description: "Längengrad des Wohnorts, z. B. 9.9620 (wird nicht gespeichert)"
         required: true
       fuer:
-        description: "Für wen? mich = deine Entfernungen (km-Spalte), Mama = ihre Entfernungen (gerundet, nur für die Empfehlung)"
+        description: "Für wen? mich = deine Entfernungen (km-Spalte), Mama = ihre Entfernungen (für ihre Empfehlung und die km-Spalte bei E10)"
         type: choice
         options: [mich, Mama]
         default: mich

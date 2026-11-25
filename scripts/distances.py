@@ -4,8 +4,7 @@ Der Wohnort kommt aus den Umgebungsvariablen HOME_LAT und HOME_LNG und wird nich
 gespeichert, nur die Kilometer und die Lage der Tankstellen. Braucht TK_API_KEY.
 
 Mit PROFILE (z. B. "mama") werden die Entfernungen für einen anderen Wohnort unter
-km_by[PROFILE] gespeichert, auf ganze Kilometer gerundet, damit die öffentliche Seite
-den Wohnort weniger genau verrät.
+km_by[PROFILE] gespeichert, wie die eigenen auf eine Nachkommastelle.
 """
 import json
 import math
@@ -42,8 +41,8 @@ def main():
             s["lat"], s["lng"] = data["station"]["lat"], data["station"]["lng"]
         km = km_between(home[0], home[1], s["lat"], s["lng"])
         if profile:
-            s.setdefault("km_by", {})[profile] = int(round(km))
-            print(f"{int(round(km)):4d} km  {s['name']}, {s.get('street')}, {s.get('place')}")
+            s.setdefault("km_by", {})[profile] = round(km, 1)
+            print(f"{round(km, 1):6.1f} km  {s['name']}, {s.get('street')}, {s.get('place')}")
         else:
             s["km"] = round(km, 1)
             print(f"{s['km']:6.1f} km  {s['name']}, {s.get('street')}, {s.get('place')}")
