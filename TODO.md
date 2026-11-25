@@ -10,3 +10,7 @@
       (kostenpflichtig) die Prognose verbessern, bei einer Woche oder mehr lohnt sich das nicht.
 - [ ] **Historische Preise (optional):** Bei Tankerkönig nach Zugang zum Datenbestand fragen. Damit
       ließe sich die Vergangenheit sofort auffüllen statt über Wochen zu sammeln.
+- [ ] **Benachrichtigungen aufs Handy (nach der Testphase entscheiden):** Meldung bei günstigem Preis,
+      z. B. gegen 10:30 Uhr, höchstens einmal am Tag, wenn die sinnvollste Tankstelle zu den günstigsten
+      20 % der letzten 30 Tage gehört. Wege: App „ntfy“ (einfach, empfohlen) oder Web-Push direkt aus der
+      Web-App (aufwendiger). Offen: eigener Kanal für Mama (E10)? Uhrzeit?
