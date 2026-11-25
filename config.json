@@ -5,112 +5,144 @@
       "name": "Shell",
       "street": "Kieler Str. 40",
       "place": "Kaltenkirchen",
-      "km": 0.7
+      "km": 0.7,
+      "lat": 53.840706,
+      "lng": 9.948806
     },
     {
       "id": "6b154047-f80c-46c9-93b4-7632f019be6f",
       "name": "Aral",
       "street": "Kieler Straße 51-53",
       "place": "Kaltenkirchen",
-      "km": 0.7
+      "km": 0.7,
+      "lat": 53.840725,
+      "lng": 9.947619
     },
     {
       "id": "005056ba-7cb6-1ed2-bceb-5fa30d83cd1b",
       "name": "famila",
       "street": "Kisdorfer Weg 13",
       "place": "Kaltenkirchen",
-      "km": 1.9
+      "km": 1.9,
+      "lat": 53.82952,
+      "lng": 9.97833
     },
     {
       "id": "b54c85ea-b5e2-4443-b5aa-bca723ad8705",
       "name": "Aral",
       "street": "Rudolf-Diesel-Straße 2",
       "place": "Henstedt-Ulzburg",
-      "km": 4.4
+      "km": 4.4,
+      "lat": 53.80396,
+      "lng": 9.939107
     },
     {
       "id": "51d4b4c0-a095-1aa0-e100-80009459e03a",
       "name": "Supermarkt-Tankstelle",
       "street": "Gutenbergstr. 7A",
       "place": "Henstedt-Ulzburg",
-      "km": 4.6
+      "km": 4.6,
+      "lat": 53.80277,
+      "lng": 9.98111
     },
     {
       "id": "820d5015-a497-4f26-9bc8-94ffce14a31f",
       "name": "AVIA XPress",
       "street": "Henstedter Straße 2",
       "place": "Kisdorf",
-      "km": 5
+      "km": 5.0,
+      "lat": 53.806347,
+      "lng": 10.003867
     },
     {
       "id": "6566bc9f-7d4e-545d-a4bd-db18f3b9705b",
       "name": "Hoyer",
       "street": "Max-Weber-Str. 10",
       "place": "Quickborn",
-      "km": null
+      "km": 11.0,
+      "lat": 53.74415206909,
+      "lng": 9.93342208862
     },
     {
       "id": "005056ba-7cb6-1ed2-bceb-a1a849084d3e",
       "name": "star",
       "street": "Langenhorner Chaussee 141",
       "place": "Hamburg",
-      "km": null
+      "km": 22.2,
+      "lat": 53.644606,
+      "lng": 10.01265
     },
     {
       "id": "09626ef9-ac6f-462c-8a56-43cfc5036309",
       "name": "Classic",
       "street": "Langenhorner Chaussee 216",
       "place": "Hamburg",
-      "km": null
+      "km": 21.7,
+      "lat": 53.6496,
+      "lng": 10.0096
     },
     {
       "id": "3e2b4b52-38fa-42c0-aeda-1a9085bd2554",
       "name": "Access",
       "street": "Kieler Str. 32-34",
       "place": "Quickborn",
-      "km": null
+      "km": 13.6,
+      "lat": 53.724487,
+      "lng": 9.900447
     },
     {
       "id": "c4fac79a-ed2e-4532-95a3-0d642691c5e3",
       "name": "team",
       "street": "Bahnhofstr. 11",
       "place": "Schuby",
-      "km": null
+      "km": 81.1,
+      "lat": 54.5161,
+      "lng": 9.4804
     },
     {
       "id": "005056ba-7cb6-1ed2-bceb-5332ab168d12",
       "name": "famila",
       "street": "Pascalstraße 11",
       "place": "Quickborn",
-      "km": null
+      "km": 11.2,
+      "lat": 53.74215,
+      "lng": 9.94124
     },
     {
       "id": "51d4b5a5-a095-1aa0-e100-80009459e03a",
       "name": "Jet",
       "street": "Hamburger Str. 48",
       "place": "Henstedt-Ulzburg",
-      "km": null
+      "km": 6.4,
+      "lat": 53.78584,
+      "lng": 9.9773
     },
     {
       "id": "167804fa-e116-4ee7-a287-35634c1d47ac",
       "name": "Shell",
       "street": "Hamburger Str. / Edisonstr. 13",
       "place": "Henstedt-Ulzburg",
-      "km": null
+      "km": 8.9,
+      "lat": 53.763352,
+      "lng": 9.980336
     },
     {
       "id": "16e6477d-7796-4084-9330-b60ea4a1b629",
       "name": "bft",
       "street": "Harksheider Weg 87",
       "place": "Quickborn",
-      "km": null
+      "km": 13.1,
+      "lat": 53.727945,
+      "lng": 9.911984
     },
     {
       "id": "7f6f2a9b-b563-4b4a-9fc7-3ea481cce518",
       "name": "Greenline",
       "street": "An der Autobahn 18-20",
       "place": "Buchholz",
-      "km": null
+      "km": 131.4,
+      "lat": 52.6715,
+      "lng": 9.6891
     }
   ],
   "fuels": [
