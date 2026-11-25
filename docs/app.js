@@ -253,6 +253,7 @@ function render(){
   const eur2=x=>(x>=0?"+":"−")+de(Math.abs(x),2)+" €";
   const gainCell=(o,v)=>{
     if(ref&&o.i===ref.i)return `<td class="gain flat calc" tabindex="0" data-calc="${esc(JSON.stringify({ref:1,v:v.name,st:o.x.name+" "+(o.x.place||"")}))}">Bezug</td>`;
+    if(o.x.unterwegs)return `<td class="gain flat">–</td>`; // Tankstellen unterwegs: keine Umwegrechnung
     const t=trip(o,v);if(!t)return `<td class="gain flat">–</td>`;
     const c={v:v.name,st:o.x.name+" "+(o.x.place||""),fill:v.fill_l,diff:ref.p-o.p,save:t.save,way:!!o.x.unterwegs,
       kmS:o.x.km,kmR:ref.x.km,rf:RF,extra:t.extra,l100:v.l_per_100km,liters:t.liters,price:o.p,cost:t.cost,net:t.net,refSt:ref.x.name+" "+(ref.x.place||"")};
@@ -277,7 +278,7 @@ function render(){
     const way=rows.filter(o=>o.x.unterwegs&&o.p!=null&&ref.p-o.p>=1).map(o=>`${esc(o.x.name)} ${esc(o.x.place||"")} ${de(ref.p-o.p,0)} ct`);
     if(way.length)lines.push(`<div><b>Unterwegs günstiger:</b> ${way.join(", ")} unter ${esc(ref.x.name)} ${esc(ref.x.place||"")}.</div>`);
     hint.innerHTML=lines.join("");hint.hidden=false;
-    note.textContent=`Spalten ${VEH.map(v=>v.name).join(" und ")}: Ersparnis je Tankfüllung (${VEH.map(v=>v.name+" "+v.fill_l+" l").join(", ")}) gegenüber der nächstgelegenen geöffneten Tankstelle, abzüglich Kraftstoff für den Umweg hin und zurück (Luftlinie × ${de(RF,1)}). Zeit und Verschleiß sind nicht eingerechnet. „unterwegs“: liegt auf einer Strecke, die ihr ohnehin fahrt, daher ohne Umweg gerechnet.`;note.hidden=false;
+    note.textContent=`Spalten ${VEH.map(v=>v.name).join(" und ")}: Ersparnis je Tankfüllung (${VEH.map(v=>v.name+" "+v.fill_l+" l").join(", ")}) gegenüber der nächstgelegenen geöffneten Tankstelle, abzüglich Kraftstoff für den Umweg hin und zurück (Luftlinie × ${de(RF,1)}). Zeit und Verschleiß sind nicht eingerechnet. Für Tankstellen „unterwegs“ entfällt die Rechnung.`;note.hidden=false;
   }else{hint.hidden=true;note.hidden=true}
   // Feld rechts oben: sinnvollste Tankstelle je Fahrzeug, also das beste Ergebnis nach Fahrtkosten.
   // Gezählt werden nur Tankstellen in der Nähe (nicht "unterwegs"); bei Gleichstand die nähere.
