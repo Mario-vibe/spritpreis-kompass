@@ -20,7 +20,7 @@ function message(html){const m=$("msg");m.innerHTML="<div>"+html+"</div>";m.hidd
 
 /* ---------- Daten laden ---------- */
 let S;
-try{const r=await fetch("data/site.json",{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status);S=await r.json()}
+try{const r=await fetch("data/site.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status);S=await r.json()}
 catch(e){$("v-head").textContent="Keine Daten";message("<b>Die Preisdaten konnten nicht geladen werden.</b> Bitte die Seite später neu laden. ("+esc(e.message)+")");return}
 if(S.demo)$("demo-badge").hidden=false;
 if(!S.stations.length){$("v-head").textContent="Noch keine Tankstellen eingerichtet";message("In <b>config.json</b> stehen noch keine Tankstellen. Die Anleitung im README erklärt, wie man sie einträgt.");return}
@@ -483,5 +483,20 @@ $("mama-copy").addEventListener("click",e=>{const b=e.currentTarget;
   const fallback=()=>{const t=$("mama-text");t.textContent=window.__mama;const r=document.createRange();r.selectNodeContents(t);const s=getSelection();s.removeAllRanges();s.addRange(r);done("Text markiert, bitte kopieren")};
   if(navigator.clipboard)navigator.clipboard.writeText(window.__mama).then(()=>done("Kopiert"),fallback);else fallback()});
 let rt;window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(render,150)});
+/* ---------- Aktualisieren ----------
+   Als Web-App auf dem Startbildschirm bleibt die Seite im Hintergrund geöffnet und lädt nicht von selbst neu.
+   Deshalb beim Zurückkehren in die App und alle 2 Minuten prüfen, ob neue Daten veröffentlicht wurden. */
+let checking=false;
+async function checkUpdate(){
+  if(checking)return;checking=true;
+  try{const r=await fetch("data/site.json?t="+Date.now(),{cache:"no-store"});
+    if(r.ok){const n=await r.json();if(n.generated!==S.generated){location.reload();return}}
+  }catch(e){}
+  checking=false;
+}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")checkUpdate()});
+window.addEventListener("pageshow",e=>{if(e.persisted)checkUpdate()});
+setInterval(()=>{if(document.visibilityState==="visible")checkUpdate()},120000);
+$("reload").addEventListener("click",()=>{const b=$("reload");b.disabled=true;b.textContent="Lädt …";location.reload()});
 render();
 })();
