@@ -21,13 +21,12 @@ jobs:
   berechnen:
     runs-on: ubuntu-latest
     steps:
+      # Die Werte direkt aus den Ereignisdaten lesen: Stünden sie im env-Block dieses Schritts,
+      # würde GitHub sie im Protokoll anzeigen, bevor sie unkenntlich gemacht sind.
       - name: Koordinaten in Protokollen unkenntlich machen
-        env:
-          BREITE: ${{ inputs.breite }}
-          LAENGE: ${{ inputs.laenge }}
         run: |
-          echo "::add-mask::$BREITE"
-          echo "::add-mask::$LAENGE"
+          echo "::add-mask::$(jq -r '.inputs.breite' "$GITHUB_EVENT_PATH")"
+          echo "::add-mask::$(jq -r '.inputs.laenge' "$GITHUB_EVENT_PATH")"
 
       - uses: actions/checkout@v7
 
