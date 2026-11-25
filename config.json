@@ -193,6 +193,15 @@
       "km_by": {
         "mama": 123.9
       }
+    },
+    {
+      "id": "51a467c6-1ca2-4bf4-81e2-945a6973ac94",
+      "name": "ARAL",
+      "street": "Hamburger Straße 123",
+      "place": "Henstedt-Ulzburg",
+      "km": null,
+      "lat": 53.786987,
+      "lng": 9.979266
     }
   ],
   "fuels": [
