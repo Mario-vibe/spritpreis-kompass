@@ -25,7 +25,8 @@ catch(e){$("v-head").textContent="Keine Daten";message("<b>Die Preisdaten konnte
 if(S.demo)$("demo-badge").hidden=false;
 if(!S.stations.length){$("v-head").textContent="Noch keine Tankstellen eingerichtet";message("In <b>config.json</b> stehen noch keine Tankstellen. Die Anleitung im README erklärt, wie man sie einträgt.");return}
 
-const now=new Date(Math.floor(S.generated*1000/(STEP*MIN))*STEP*MIN);
+// Genauer Zeitpunkt des letzten Abrufs: nicht abrunden, sonst fällt der zuletzt gemessene Preis heraus
+const now=new Date(S.generated*1000);
 const ageMin=(Date.now()-S.generated*1000)/MIN;
 if(!S.demo&&ageMin>90)message(`<b>Die Daten sind ${ageMin>2880?Math.round(ageMin/1440)+" Tage":Math.round(ageMin/60)+" Stunden"} alt.</b> Der automatische Abruf läuft gerade nicht. Alle Angaben beziehen sich auf den ${dmy(now)}, ${hm(now)} Uhr.`);
 const NCYC=S.days||120;
@@ -64,7 +65,8 @@ function buildFuel(fuel){
   const ptr=ev.map(()=>0),cur=ev.map(()=>null);
   const t0=STARTS[0],t1=now.getTime();
   const series=[];let ci=0;
-  for(let t=t0;t<=t1;t+=STEP*MIN){
+  // 5-Minuten-Raster und zusätzlich genau der Zeitpunkt des letzten Abrufs
+  for(let t=t0;t<=t1;t=(t===t1?t1+1:Math.min(t+STEP*MIN,t1))){
     const ts=t/1000;
     const vals=ev.map((e,i)=>{while(ptr[i]<e.length&&e[ptr[i]][0]<=ts){cur[i]=e[ptr[i]][1];ptr[i]++}return cur[i]});
     while(STARTS[ci+1]<=t)ci++;
@@ -128,7 +130,7 @@ function lineChart(el,cfg){
   let ys=[];cfg.series.forEach(s=>s.pts.forEach(p=>ys.push(p[1])));(cfg.bands||[]).forEach(b=>b.pts.forEach(p=>ys.push(p[1],p[2])));
   ys=ys.filter(v=>v!=null&&isFinite(v));if(!ys.length){el.innerHTML='<p class="small muted">Noch zu wenig Daten für dieses Diagramm.</p>';return}
   let y0=Math.min(...ys),y1=Math.max(...ys);const yp=(y1-y0)*.08||1;y0-=yp;y1+=yp;
-  const st=niceStep(y1-y0,Wd<520?4:5);y0=Math.floor(y0/st)*st;y1=Math.ceil(y1/st)*st;
+  const st=Math.max(niceStep(y1-y0,Wd<520?4:5),cfg.minStep||0);y0=Math.floor(y0/st)*st;y1=Math.ceil(y1/st)*st;
   const[x0,x1]=cfg.x;
   const X=v=>pad.l+(v-x0)/(x1-x0)*(Wd-pad.l-pad.r),Y=v=>pad.t+(y1-v)/(y1-y0)*(H-pad.t-pad.b);
   let g="";
@@ -250,7 +252,7 @@ function render(){
   lineChart($("ch-48"),{x:[from,to],aria:"Preisverlauf 48 Stunden und Prognose",stepTip:true,
     series:[{name:"gemessen",color:"var(--s1)",pts:meas,step:true,end:true},{name:"Prognose",color:"var(--s1)",pts:fpts.length?[[last.t,last.best]].concat(fpts.map(p=>[p.t,p.y])):[],step:true,dash:true}],
     bands:[{pts:fpts.map(p=>[p.t,p.lo,p.hi])}],vlines:vl,xTicks:ticks,tol:10*MIN,
-    yFmt:v=>de(v/100,2),tipFmt:priceTxt,xFmt:t=>new Date(t).toLocaleDateString("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",year:"numeric"})+", "+hm(t)+" Uhr"});
+    minStep:1,yFmt:v=>de(v/100,2),tipFmt:priceTxt,xFmt:t=>new Date(t).toLocaleDateString("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",year:"numeric"})+", "+hm(t)+" Uhr"});
 
   // Tagesprofil
   const prof=k=>(F.byK[k]||[]).map(p=>[p.m,p.best]);
@@ -260,7 +262,7 @@ function render(){
   const hTicks=[0,180,360,540,720,900,1080,1260,1440].map(m=>({v:m,label:((12+m/60)%24)+" Uhr"}));
   lineChart($("ch-day"),{x:[0,1440],aria:"Tagesprofil heute, gestern und Durchschnitt",stepTip:true,
     series:[{name:"Ø 14 Tage",color:"var(--s3)",pts:avgDay},{name:"gestern",color:"var(--s2)",pts:prof(-1),step:true},{name:"heute",color:"var(--s1)",pts:prof(0),step:true,end:true}],
-    xTicks:hTicks,tol:10,yFmt:v=>de(v/100,2),tipFmt:priceTxt,xFmt:m=>hm(cyc0+m*MIN)+" Uhr"});
+    xTicks:hTicks,tol:10,minStep:1,yFmt:v=>de(v/100,2),tipFmt:priceTxt,xFmt:m=>hm(cyc0+m*MIN)+" Uhr"});
 
   // Rückblick und Ausblick
   const hist=F.daily.filter(d=>d.lo!=null);
@@ -274,7 +276,7 @@ function render(){
     bands:[{pts:hist.map(d=>[d.t,d.lo,d.hi])},{pts:fd.map(d=>[d.t,d.lo,d.hi]),color:"var(--range)"}],
     ranges:[{x0:RS,x1:RE,label:"Tankrabatt"}],
     vlines:[{x:now.getTime(),label:"heute",strong:true}].concat(RE>lf&&RE<lt?[{x:RE,label:dm(RE)}]:[]),
-    xTicks:mTicks,tol:DAY*.6,yFmt:v=>de(v/100,2),tipFmt:priceTxt,xFmt:dm});
+    xTicks:mTicks,tol:DAY*.6,minStep:1,yFmt:v=>de(v/100,2),tipFmt:priceTxt,xFmt:dm});
 
   // Markt
   const pname=fuel==="diesel"?"Diesel-Großhandel":"Benzin-Großhandel";
