@@ -279,6 +279,29 @@ function render(){
     hint.innerHTML=lines.join("");hint.hidden=false;
     note.textContent=`Spalten ${VEH.map(v=>v.name).join(" und ")}: Ersparnis je Tankfüllung (${VEH.map(v=>v.name+" "+v.fill_l+" l").join(", ")}) gegenüber der nächstgelegenen geöffneten Tankstelle, abzüglich Kraftstoff für den Umweg hin und zurück (Luftlinie × ${de(RF,1)}). Zeit und Verschleiß sind nicht eingerechnet. „unterwegs“: liegt auf einer Strecke, die ihr ohnehin fahrt, daher ohne Umweg gerechnet.`;note.hidden=false;
   }else{hint.hidden=true;note.hidden=true}
+  // Feld rechts oben: sinnvollste Tankstelle je Fahrzeug, also das beste Ergebnis nach Fahrtkosten.
+  // Gezählt werden nur Tankstellen in der Nähe (nicht "unterwegs"); bei Gleichstand die nähere.
+  const smart=$("p-smart");
+  const cand=rows.filter(o=>o.p!=null&&o.x.km!=null&&!o.x.unterwegs);
+  if(VEH.length&&ref&&cand.length){
+    const picks=VEH.map(v=>{const b=cand.map(o=>({o,t:o.i===ref.i?{net:0}:trip(o,v)})).filter(z=>z.t)
+      .sort((a,b)=>(b.t.net-a.t.net)||(KM[a.o.i]-KM[b.o.i]))[0];return {v,o:b.o,net:b.t.net}});
+    const groups=[];picks.forEach(p=>{const g=groups.find(g=>g.o.i===p.o.i);if(g)g.ps.push(p);else groups.push({o:p.o,ps:[p]})});
+    const names=a=>a.map(p=>esc(p.v.name)).join(" und ");
+    const cheap=rows.find(o=>o.i===last.bi);
+    if(groups.length===1&&groups[0].o.i===last.bi){
+      smart.innerHTML=`<div class="p-same"><span>Auch mit Fahrtkosten die <b>sinnvollste Wahl</b> für ${names(groups[0].ps)}.</span></div>`;
+    }else{
+      smart.innerHTML=`<hr class="p-sep"><span class="lbl">Sinnvollste Tankstelle mit Fahrtkosten</span>`+groups.map(g=>{
+        const x=g.o.x;
+        const same=g.o.i===last.bi;
+        const vs=same?"":g.ps.map(p=>{const tc=cheap.x.unterwegs?null:trip(cheap,p.v);return tc?`${esc(p.v.name)} <b>${eur2(p.net-tc.net)}</b>`:""}).filter(Boolean).join(", ");
+        return `<div class="price second">${priceHTML(g.o.p)}<span style="font-size:.4em"> €</span></div>
+          <div class="where">${esc([x.name,[x.street,x.place].filter(Boolean).join(", "),x.km!=null?de(x.km,1)+" km":""].filter(Boolean).join(" · "))}</div>
+          <div class="p-note">für ${names(g.ps)}${same?", zugleich die günstigste":vs?` · gegenüber der Fahrt zur günstigsten je Tankfüllung: ${vs}`:""}</div>`}).join(`<hr class="p-sep">`);
+    }
+    smart.hidden=false;
+  }else smart.hidden=true;
 
   // 48 Stunden
   const from=now.getTime()-48*HOUR,to=cycStart(1)+(now.getTime()-cyc0)+60*MIN;
