@@ -43,6 +43,8 @@ def main():
                 "street": f"{s['street']} {s.get('houseNumber') or ''}".strip(),
                 "place": s["place"],
                 "km": round(s["dist"], 1),
+                "lat": s["lat"],
+                "lng": s["lng"],
             })
         save_config(cfg)
         print(f"\n{len(cfg['stations'])} Tankstellen stehen jetzt in config.json.")

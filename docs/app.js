@@ -225,7 +225,7 @@ function render(){
   $("c-rank").textContent=s.nLows>=7?`${s.rank}. von ${s.nLows+1}`:"–";
   $("p-fuel").textContent=`${name} · günstigster Preis`;
   $("p-price").innerHTML=priceHTML(last.best)+'<span style="font-size:.4em"> €</span>';
-  $("p-where").textContent=[stn[last.bi].name,stn[last.bi].street,stn[last.bi].km!=null?de(stn[last.bi].km,1)+" km":""].filter(Boolean).join(" · ");
+  $("p-where").textContent=[stn[last.bi].name,[stn[last.bi].street,stn[last.bi].place].filter(Boolean).join(", "),stn[last.bi].km!=null?de(stn[last.bi].km,1)+" km":""].filter(Boolean).join(" · ");
   const mtn=Math.max(0,Math.round((cycStart(1)-now.getTime())/MIN));
   $("p-clock").textContent=`Stand ${hm(now)} Uhr · nächste Erhöhung in ${Math.floor(mtn/60)} h ${mtn%60} min`;
 
@@ -315,7 +315,7 @@ function render(){
   // Info für Mama (immer Super E10)
   if(DATA.e10&&DATA.e10.series.length){
     const E=DATA.e10,es=stats(E),el=es.last,good=es.nLows>=14&&es.rank<=Math.ceil(es.nLows*0.25);
-    const where=stn[el.bi].name+(stn[el.bi].street?", "+stn[el.bi].street:"");
+    const where=[stn[el.bi].name,stn[el.bi].street,stn[el.bi].place].filter(Boolean).join(", ");
     $("mama").hidden=false;
     $("mama-text").innerHTML=good
       ?`<b style="color:var(--good)">Guter Preis.</b> Super E10 kostet gerade ${priceTxt(el.best)} bei ${esc(where)}, Platz ${es.rank} der letzten ${es.nLows} Tagestiefs.`

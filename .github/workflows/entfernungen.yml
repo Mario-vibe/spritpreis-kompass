@@ -1,0 +1,54 @@
+name: Entfernungen berechnen
+
+on:
+  workflow_dispatch:
+    inputs:
+      breite:
+        description: "Breitengrad des Wohnorts, z. B. 53.8350 (wird nicht gespeichert)"
+        required: true
+      laenge:
+        description: "Längengrad des Wohnorts, z. B. 9.9620 (wird nicht gespeichert)"
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daten
+  cancel-in-progress: false
+
+jobs:
+  berechnen:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Koordinaten in Protokollen unkenntlich machen
+        env:
+          BREITE: ${{ inputs.breite }}
+          LAENGE: ${{ inputs.laenge }}
+        run: |
+          echo "::add-mask::$BREITE"
+          echo "::add-mask::$LAENGE"
+
+      - uses: actions/checkout@v7
+
+      - name: Entfernungen berechnen
+        env:
+          TK_API_KEY: ${{ secrets.TK_API_KEY }}
+          HOME_LAT: ${{ inputs.breite }}
+          HOME_LNG: ${{ inputs.laenge }}
+        run: |
+          cd scripts
+          set -o pipefail
+          python3 distances.py | tee liste.txt
+          { echo '### Entfernungen (Luftlinie)'; echo '```'; cat liste.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          rm liste.txt
+
+      - name: Speichern
+        run: |
+          git config user.name "spritpreis-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add config.json
+          if ! git diff --cached --quiet; then
+            git commit -q -m "Entfernungen der Tankstellen berechnet"
+            git pull -q --rebase && git push -q
+          fi
