@@ -238,10 +238,10 @@ function render(){
   $("tbl-time").textContent=`Stand ${hm(now)} Uhr`;
   const today=F.byK[0]||[];
   $("tbl").innerHTML=stn.map((x,i)=>({x,i,p:last.st[i]})).sort((a,b)=>(a.p??1e9)-(b.p??1e9)).map(o=>{
-    if(o.p==null)return `<tr><td>${esc(o.x.name)}<div class="small muted">${esc(o.x.street||"")}</div></td><td class="num">${o.x.km!=null?de(o.x.km,1):""}</td><td class="muted" colspan="3">geschlossen oder kein Preis</td></tr>`;
+    if(o.p==null)return `<tr><td>${esc(o.x.name)}<div class="small muted">${esc([o.x.street,o.x.place].filter(Boolean).join(", "))}</div></td><td class="num">${o.x.km!=null?de(o.x.km,1):""}</td><td class="muted" colspan="3">geschlossen oder kein Preis</td></tr>`;
     const yp=s.yRow?s.yRow.st[o.i]:null;const d=yp!=null?o.p-yp:null;
     const peak=Math.max(...today.map(p=>p.st[o.i]).filter(v=>v!=null),o.p);const fell=peak-o.p;
-    return `<tr class="${o.i===last.bi?"best":""}"><td>${esc(o.x.name)}${o.i===last.bi?'<span class="tag">günstigste</span>':""}<div class="small muted">${esc(o.x.street||"")}</div></td><td class="num">${o.x.km!=null?de(o.x.km,1):""}</td><td class="p">${priceHTML(o.p)}</td><td class="num ${d==null?"":cls(d)}">${d==null?"–":sgn(d)}</td><td class="num muted">${fell>0.05?"−"+de(fell,0)+" ct":"noch keine Senkung"}</td></tr>`}).join("");
+    return `<tr class="${o.i===last.bi?"best":""}"><td>${esc(o.x.name)}${o.i===last.bi?'<span class="tag">günstigste</span>':""}<div class="small muted">${esc([o.x.street,o.x.place].filter(Boolean).join(", "))}</div></td><td class="num">${o.x.km!=null?de(o.x.km,1):""}</td><td class="p">${priceHTML(o.p)}</td><td class="num ${d==null?"":cls(d)}">${d==null?"–":sgn(d)}</td><td class="num muted">${fell>0.05?"−"+de(fell,0)+" ct":"noch keine Senkung"}</td></tr>`}).join("");
 
   // 48 Stunden
   const from=now.getTime()-48*HOUR,to=cycStart(1)+(now.getTime()-cyc0)+60*MIN;

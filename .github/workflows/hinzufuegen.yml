@@ -1,0 +1,42 @@
+name: Tankstellen hinzufügen
+
+on:
+  workflow_dispatch:
+    inputs:
+      liste:
+        description: "Einträge durch ; getrennt, je Eintrag: Marke|Straße|Breite,Länge|Umkreis_km"
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daten
+  cancel-in-progress: false
+
+jobs:
+  hinzufuegen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Tankstellen suchen und eintragen
+        env:
+          TK_API_KEY: ${{ secrets.TK_API_KEY }}
+          LISTE: ${{ inputs.liste }}
+        run: |
+          cd scripts
+          set -o pipefail
+          python3 add_stations.py | tee bericht.txt
+          { echo '### Ergebnis'; cat bericht.txt; } >> "$GITHUB_STEP_SUMMARY"
+          rm bericht.txt
+
+      - name: Auswahl speichern
+        run: |
+          git config user.name "spritpreis-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add config.json
+          if ! git diff --cached --quiet; then
+            git commit -q -m "Tankstellen hinzugefügt"
+            git pull -q --rebase && git push -q
+          fi
