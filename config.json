@@ -7,7 +7,10 @@
       "place": "Kaltenkirchen",
       "km": 0.7,
       "lat": 53.840706,
-      "lng": 9.948806
+      "lng": 9.948806,
+      "km_by": {
+        "mama": 8
+      }
     },
     {
       "id": "6b154047-f80c-46c9-93b4-7632f019be6f",
@@ -16,7 +19,10 @@
       "place": "Kaltenkirchen",
       "km": 0.7,
       "lat": 53.840725,
-      "lng": 9.947619
+      "lng": 9.947619,
+      "km_by": {
+        "mama": 8
+      }
     },
     {
       "id": "005056ba-7cb6-1ed2-bceb-5fa30d83cd1b",
@@ -25,7 +31,10 @@
       "place": "Kaltenkirchen",
       "km": 1.9,
       "lat": 53.82952,
-      "lng": 9.97833
+      "lng": 9.97833,
+      "km_by": {
+        "mama": 6
+      }
     },
     {
       "id": "b54c85ea-b5e2-4443-b5aa-bca723ad8705",
@@ -34,7 +43,10 @@
       "place": "Henstedt-Ulzburg",
       "km": 4.4,
       "lat": 53.80396,
-      "lng": 9.939107
+      "lng": 9.939107,
+      "km_by": {
+        "mama": 4
+      }
     },
     {
       "id": "51d4b4c0-a095-1aa0-e100-80009459e03a",
@@ -43,7 +55,10 @@
       "place": "Henstedt-Ulzburg",
       "km": 4.6,
       "lat": 53.80277,
-      "lng": 9.98111
+      "lng": 9.98111,
+      "km_by": {
+        "mama": 3
+      }
     },
     {
       "id": "820d5015-a497-4f26-9bc8-94ffce14a31f",
@@ -52,7 +67,10 @@
       "place": "Kisdorf",
       "km": 5.0,
       "lat": 53.806347,
-      "lng": 10.003867
+      "lng": 10.003867,
+      "km_by": {
+        "mama": 4
+      }
     },
     {
       "id": "6566bc9f-7d4e-545d-a4bd-db18f3b9705b",
@@ -61,7 +79,10 @@
       "place": "Quickborn",
       "km": 11.0,
       "lat": 53.74415206909,
-      "lng": 9.93342208862
+      "lng": 9.93342208862,
+      "km_by": {
+        "mama": 4
+      }
     },
     {
       "id": "005056ba-7cb6-1ed2-bceb-a1a849084d3e",
@@ -70,7 +91,10 @@
       "place": "Hamburg",
       "km": 22.2,
       "lat": 53.644606,
-      "lng": 10.01265
+      "lng": 10.01265,
+      "km_by": {
+        "mama": 15
+      }
     },
     {
       "id": "09626ef9-ac6f-462c-8a56-43cfc5036309",
@@ -79,7 +103,10 @@
       "place": "Hamburg",
       "km": 21.7,
       "lat": 53.6496,
-      "lng": 10.0096
+      "lng": 10.0096,
+      "km_by": {
+        "mama": 14
+      }
     },
     {
       "id": "3e2b4b52-38fa-42c0-aeda-1a9085bd2554",
@@ -88,7 +115,10 @@
       "place": "Quickborn",
       "km": 13.6,
       "lat": 53.724487,
-      "lng": 9.900447
+      "lng": 9.900447,
+      "km_by": {
+        "mama": 7
+      }
     },
     {
       "id": "c4fac79a-ed2e-4532-95a3-0d642691c5e3",
@@ -98,7 +128,10 @@
       "km": 81.1,
       "lat": 54.5161,
       "lng": 9.4804,
-      "unterwegs": true
+      "unterwegs": true,
+      "km_by": {
+        "mama": 89
+      }
     },
     {
       "id": "005056ba-7cb6-1ed2-bceb-5332ab168d12",
@@ -107,7 +140,10 @@
       "place": "Quickborn",
       "km": 11.2,
       "lat": 53.74215,
-      "lng": 9.94124
+      "lng": 9.94124,
+      "km_by": {
+        "mama": 4
+      }
     },
     {
       "id": "51d4b5a5-a095-1aa0-e100-80009459e03a",
@@ -116,7 +152,10 @@
       "place": "Henstedt-Ulzburg",
       "km": 6.4,
       "lat": 53.78584,
-      "lng": 9.9773
+      "lng": 9.9773,
+      "km_by": {
+        "mama": 1
+      }
     },
     {
       "id": "167804fa-e116-4ee7-a287-35634c1d47ac",
@@ -125,7 +164,10 @@
       "place": "Henstedt-Ulzburg",
       "km": 8.9,
       "lat": 53.763352,
-      "lng": 9.980336
+      "lng": 9.980336,
+      "km_by": {
+        "mama": 1
+      }
     },
     {
       "id": "16e6477d-7796-4084-9330-b60ea4a1b629",
@@ -134,7 +176,10 @@
       "place": "Quickborn",
       "km": 13.1,
       "lat": 53.727945,
-      "lng": 9.911984
+      "lng": 9.911984,
+      "km_by": {
+        "mama": 6
+      }
     },
     {
       "id": "7f6f2a9b-b563-4b4a-9fc7-3ea481cce518",
@@ -144,7 +189,10 @@
       "km": 131.4,
       "lat": 52.6715,
       "lng": 9.6891,
-      "unterwegs": true
+      "unterwegs": true,
+      "km_by": {
+        "mama": 124
+      }
     }
   ],
   "fuels": [
