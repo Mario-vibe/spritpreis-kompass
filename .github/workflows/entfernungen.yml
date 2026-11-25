@@ -17,6 +17,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: daten
@@ -57,3 +58,9 @@ jobs:
             git commit -q -m "Entfernungen der Tankstellen berechnet"
             git pull -q --rebase && git push -q
           fi
+
+      # Seite sofort mit den neuen Einstellungen neu aufbauen, statt auf den nächsten Preisabruf zu warten
+      - name: Seite aktualisieren lassen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run preise.yml --ref main
