@@ -41,6 +41,62 @@
       "street": "Henstedter Straße 2",
       "place": "Kisdorf",
       "km": 5
+    },
+    {
+      "id": "6566bc9f-7d4e-545d-a4bd-db18f3b9705b",
+      "name": "Hoyer",
+      "street": "Max-Weber-Str. 10",
+      "place": "Quickborn",
+      "km": null
+    },
+    {
+      "id": "005056ba-7cb6-1ed2-bceb-a1a849084d3e",
+      "name": "STAR",
+      "street": "Langenhorner Chaussee 141",
+      "place": "Hamburg",
+      "km": null
+    },
+    {
+      "id": "09626ef9-ac6f-462c-8a56-43cfc5036309",
+      "name": "CLASSIC",
+      "street": "Langenhorner Chaussee 216",
+      "place": "Hamburg",
+      "km": null
+    },
+    {
+      "id": "3e2b4b52-38fa-42c0-aeda-1a9085bd2554",
+      "name": "Access",
+      "street": "Kieler Str. 32-34",
+      "place": "Quickborn",
+      "km": null
+    },
+    {
+      "id": "c4fac79a-ed2e-4532-95a3-0d642691c5e3",
+      "name": "team",
+      "street": "Bahnhofstr. 11",
+      "place": "Schuby",
+      "km": null
+    },
+    {
+      "id": "005056ba-7cb6-1ed2-bceb-5332ab168d12",
+      "name": "FAMILA",
+      "street": "Pascalstraße 11",
+      "place": "Quickborn",
+      "km": null
+    },
+    {
+      "id": "51d4b5a5-a095-1aa0-e100-80009459e03a",
+      "name": "JET",
+      "street": "Hamburger Str. 48",
+      "place": "Henstedt-Ulzburg",
+      "km": null
+    },
+    {
+      "id": "167804fa-e116-4ee7-a287-35634c1d47ac",
+      "name": "Shell",
+      "street": "Hamburger Str. /Edisonstr. 13",
+      "place": "Henstedt-Ulzburg",
+      "km": null
     }
   ],
   "fuels": [
