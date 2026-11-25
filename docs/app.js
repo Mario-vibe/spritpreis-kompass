@@ -435,7 +435,7 @@ function render(){
 }
 /* ---------- Info-Fenster mit der Rechnung "lohnt die Fahrt?" ---------- */
 const calcTip=document.createElement("div");calcTip.className="calc-tip";calcTip.hidden=true;calcTip.setAttribute("role","tooltip");document.body.appendChild(calcTip);
-let calcFor=null;
+let calcFor=null,calcAt=0;
 function calcHTML(c){
   if(c.ref)return `<div class="ct-title">${esc(c.v)} · ${esc(c.st)}</div><p>Das ist die nächstgelegene geöffnete Tankstelle. Alle anderen werden mit ihr verglichen.</p>`;
   const e=x=>de(Math.abs(x),2)+" €";
@@ -452,6 +452,7 @@ function calcHTML(c){
 }
 function showCalc(td){
   let c;try{c=JSON.parse(td.dataset.calc)}catch(e){return}
+  if(td!==calcFor)calcAt=Date.now();
   calcTip.innerHTML=calcHTML(c);calcTip.hidden=false;calcFor=td;
   const r=td.getBoundingClientRect(),w=calcTip.offsetWidth,h=calcTip.offsetHeight,vw=document.documentElement.clientWidth;
   let left=Math.min(Math.max(8,r.right-w),vw-w-8);let top=r.bottom+6;
@@ -460,11 +461,18 @@ function showCalc(td){
 }
 function hideCalc(){calcTip.hidden=true;calcFor=null}
 const tblBody=$("tbl");
-tblBody.addEventListener("mouseover",e=>{const td=e.target.closest("td.calc");if(td&&td!==calcFor)showCalc(td)});
-tblBody.addEventListener("mouseleave",hideCalc);
+// Überfahren gibt es nur mit der Maus; bei Finger oder Stift öffnet und schließt allein das Antippen
+let lastPointer="mouse";
+document.addEventListener("pointerdown",e=>{lastPointer=e.pointerType||"mouse"},true);
+document.addEventListener("pointermove",e=>{if(e.pointerType==="mouse")lastPointer="mouse"},true);
+tblBody.addEventListener("mouseover",e=>{if(lastPointer!=="mouse")return;const td=e.target.closest("td.calc");if(td&&td!==calcFor)showCalc(td)});
+tblBody.addEventListener("mouseleave",()=>{if(lastPointer==="mouse")hideCalc()});
 tblBody.addEventListener("focusin",e=>{const td=e.target.closest("td.calc");if(td)showCalc(td)});
 tblBody.addEventListener("focusout",hideCalc);
-tblBody.addEventListener("click",e=>{const td=e.target.closest("td.calc");if(!td)return;if(td===calcFor)hideCalc();else showCalc(td);e.stopPropagation()});
+// Beim Antippen am Handy öffnen Maus- und Fokus-Ereignisse das Fenster schon kurz vor dem Klick.
+// Ein Klick schließt es deshalb nur, wenn es nicht gerade eben (vor weniger als 0,6 s) geöffnet wurde.
+tblBody.addEventListener("click",e=>{const td=e.target.closest("td.calc");if(!td)return;
+  if(td===calcFor&&Date.now()-calcAt>600)hideCalc();else showCalc(td);e.stopPropagation()});
 document.addEventListener("click",hideCalc);
 document.addEventListener("keydown",e=>{if(e.key==="Escape")hideCalc()});
 window.addEventListener("scroll",()=>{if(calcFor)showCalc(calcFor)},{passive:true});
