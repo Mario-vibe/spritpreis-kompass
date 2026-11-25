@@ -43,6 +43,7 @@ def main():
     market_meta = json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.exists() else {}
     site = {
         "generated": generated,
+        "built": int(time.time()),
         "demo": False,
         "days": days,
         "fuels": cfg["fuels"],
@@ -59,7 +60,7 @@ def main():
         json.dump(site, f, ensure_ascii=False, separators=(",", ":"))
     # Winzige Datei nur mit dem Zeitstempel: Die Seite prüft damit, ob es Neues gibt, ohne alle Daten zu laden
     with open(DOCS / "data" / "stamp.json", "w", encoding="utf-8") as f:
-        json.dump({"generated": generated}, f)
+        json.dump({"generated": generated, "built": site["built"]}, f)
     print(f"site.json geschrieben: {len(cfg['stations'])} Tankstellen, {len(market)} Markttage.")
 
 

@@ -2,8 +2,15 @@ name: Preise abrufen
 
 on:
   schedule:
-    - cron: "*/10 * * * *"   # alle 10 Minuten (GitHub startet oft einige Minuten später)
+    # Reserve: Den eigentlichen Takt (alle 5 Minuten) gibt der Raspberry Pi vor, weil GitHub
+    # zeitgesteuerte Abläufe oft stark verzögert oder auslässt.
+    - cron: "*/30 * * * *"
   workflow_dispatch:
+    inputs:
+      erzwingen:
+        description: "Seite auch ohne Preisänderung neu veröffentlichen"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -17,18 +24,24 @@ concurrency:
 jobs:
   abrufen:
     runs-on: ubuntu-latest
+    outputs:
+      publish: ${{ steps.fetch.outputs.publish }}
     steps:
       - uses: actions/checkout@v7
 
       - name: Aktuelle Preise von Tankerkönig holen
+        id: fetch
         env:
           TK_API_KEY: ${{ secrets.TK_API_KEY }}
+          FORCE: ${{ inputs.erzwingen }}
         run: python3 scripts/fetch_current.py
 
       - name: Seite aktualisieren
+        if: steps.fetch.outputs.publish == 'true'
         run: python3 scripts/build_site.py
 
       - name: Daten speichern
+        if: steps.fetch.outputs.publish == 'true'
         run: |
           git config user.name "spritpreis-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -40,15 +53,19 @@ jobs:
 
       # Versionskennung anhängen, damit Browser nach Änderungen nicht die alte app.js aus dem Zwischenspeicher nehmen
       - name: Versionskennung setzen
+        if: steps.fetch.outputs.publish == 'true'
         run: sed -i "s#src=\"app.js\"#src=\"app.js?v=${GITHUB_SHA::8}-${GITHUB_RUN_ID}\"#" docs/index.html
 
       - uses: actions/configure-pages@v6
+        if: steps.fetch.outputs.publish == 'true'
       - uses: actions/upload-pages-artifact@v5
+        if: steps.fetch.outputs.publish == 'true'
         with:
           path: docs
 
   veroeffentlichen:
     needs: abrufen
+    if: needs.abrufen.outputs.publish == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

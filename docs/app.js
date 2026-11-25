@@ -492,7 +492,8 @@ async function checkUpdate(){
   try{// zuerst die winzige Zeitstempel-Datei (ca. 30 Bytes), nur falls sie fehlt die ganze Preisdatei
     let r=await fetch("data/stamp.json?t="+Date.now(),{cache:"no-store"});
     if(!r.ok)r=await fetch("data/site.json?t="+Date.now(),{cache:"no-store"});
-    if(r.ok){const n=await r.json();if(n.generated!==S.generated){location.reload();return}}
+    // neu laden bei neuen Preisen (generated) oder neu aufgebauter Seite, z. B. nach geänderten Einstellungen (built)
+    if(r.ok){const n=await r.json();if(n.generated!==S.generated||(n.built&&n.built!==S.built)){location.reload();return}}
   }catch(e){}
   checking=false;
 }
