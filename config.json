@@ -9,21 +9,21 @@
     },
     {
       "id": "6b154047-f80c-46c9-93b4-7632f019be6f",
-      "name": "ARAL",
+      "name": "Aral",
       "street": "Kieler Straße 51-53",
       "place": "Kaltenkirchen",
       "km": 0.7
     },
     {
       "id": "005056ba-7cb6-1ed2-bceb-5fa30d83cd1b",
-      "name": "FAMILA",
+      "name": "famila",
       "street": "Kisdorfer Weg 13",
       "place": "Kaltenkirchen",
       "km": 1.9
     },
     {
       "id": "b54c85ea-b5e2-4443-b5aa-bca723ad8705",
-      "name": "ARAL",
+      "name": "Aral",
       "street": "Rudolf-Diesel-Straße 2",
       "place": "Henstedt-Ulzburg",
       "km": 4.4
@@ -51,14 +51,14 @@
     },
     {
       "id": "005056ba-7cb6-1ed2-bceb-a1a849084d3e",
-      "name": "STAR",
+      "name": "star",
       "street": "Langenhorner Chaussee 141",
       "place": "Hamburg",
       "km": null
     },
     {
       "id": "09626ef9-ac6f-462c-8a56-43cfc5036309",
-      "name": "CLASSIC",
+      "name": "Classic",
       "street": "Langenhorner Chaussee 216",
       "place": "Hamburg",
       "km": null
@@ -79,14 +79,14 @@
     },
     {
       "id": "005056ba-7cb6-1ed2-bceb-5332ab168d12",
-      "name": "FAMILA",
+      "name": "famila",
       "street": "Pascalstraße 11",
       "place": "Quickborn",
       "km": null
     },
     {
       "id": "51d4b5a5-a095-1aa0-e100-80009459e03a",
-      "name": "JET",
+      "name": "Jet",
       "street": "Hamburger Str. 48",
       "place": "Henstedt-Ulzburg",
       "km": null
@@ -94,7 +94,7 @@
     {
       "id": "167804fa-e116-4ee7-a287-35634c1d47ac",
       "name": "Shell",
-      "street": "Hamburger Str. /Edisonstr. 13",
+      "street": "Hamburger Str. / Edisonstr. 13",
       "place": "Henstedt-Ulzburg",
       "km": null
     },
