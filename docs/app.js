@@ -259,7 +259,8 @@ function render(){
     return `<td class="gain calc ${t.net>=0.5?"pos":t.net<=-0.5?"neg":"flat"}" tabindex="0" data-calc="${esc(JSON.stringify(c))}">${Math.abs(t.net)<0.5?"lohnt kaum":eur2(t.net)}</td>`};
   $("tbl-head").innerHTML="<th>Tankstelle</th><th>km</th><th>jetzt</th><th>ggü. gestern</th><th>seit 12 Uhr</th>"+VEH.map(v=>`<th title="Ersparnis je Tankfüllung (${v.fill_l} l) abzüglich Umweg, ${de(v.l_per_100km,0)} l/100 km">${esc(v.name)}</th>`).join("");
   const nCols=5+VEH.length;
-  $("tbl").innerHTML=rows.slice().sort((a,b)=>(a.p??1e9)-(b.p??1e9)).map(o=>{
+  // Sortierung: Preis aufsteigend, bei gleichem Preis die nähere zuerst; Tankstellen ohne Preis ans Ende, ebenfalls nach Entfernung
+  $("tbl").innerHTML=rows.slice().sort((a,b)=>((a.p??1e9)-(b.p??1e9))||(KM[a.i]-KM[b.i])).map(o=>{
     const addr=`<div class="small muted">${esc([o.x.street,o.x.place].filter(Boolean).join(", "))}${o.x.unterwegs?" · unterwegs":""}</div>`;
     if(o.p==null)return `<tr><td>${esc(o.x.name)}${addr}</td><td class="num">${o.x.km!=null?de(o.x.km,1):""}</td><td class="muted" colspan="${nCols-2}">geschlossen oder kein Preis</td></tr>`;
     const yp=s.yRow?s.yRow.st[o.i]:null;const d=yp!=null?o.p-yp:null;
