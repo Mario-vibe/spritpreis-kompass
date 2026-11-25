@@ -487,8 +487,20 @@ let rt;window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(rend
    Als Web-App auf dem Startbildschirm bleibt die Seite im Hintergrund geöffnet und lädt nicht von selbst neu.
    Deshalb beim Zurückkehren in die App und alle 2 Minuten prüfen, ob neue Daten veröffentlicht wurden. */
 let checking=false;
+// Veraltete Seite aus dem Zwischenspeicher erkennen: Die veröffentlichte Version steht in data/version.json.
+// Weicht sie ab, die Seite unter einer neuen Adresse (?v=…) laden, die garantiert nicht zwischengespeichert ist.
+async function checkVersion(){
+  const mine=(document.querySelector('meta[name="app-version"]')||{}).content;
+  if(!mine||mine==="dev")return false;
+  try{const r=await fetch("data/version.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)return false;
+    const v=(await r.json()).v;
+    if(v&&v!==mine&&new URLSearchParams(location.search).get("v")!==v){location.replace(location.pathname+"?v="+encodeURIComponent(v)+location.hash);return true}
+  }catch(e){}
+  return false;
+}
 async function checkUpdate(){
   if(checking)return;checking=true;
+  if(await checkVersion())return;
   try{// zuerst die winzige Zeitstempel-Datei (ca. 30 Bytes), nur falls sie fehlt die ganze Preisdatei
     let r=await fetch("data/stamp.json?t="+Date.now(),{cache:"no-store"});
     if(!r.ok)r=await fetch("data/site.json?t="+Date.now(),{cache:"no-store"});
@@ -502,4 +514,5 @@ window.addEventListener("pageshow",e=>{if(e.persisted)checkUpdate()});
 setInterval(()=>{if(document.visibilityState==="visible")checkUpdate()},120000);
 $("reload").addEventListener("click",()=>{const b=$("reload");b.disabled=true;b.textContent="Lädt …";location.reload()});
 render();
+checkVersion();
 })();
