@@ -234,7 +234,10 @@
       "l_per_100km": 6,
       "fill_l": 25,
       "home": "mama",
-      "max_km": 10
+      "max_km": 4,
+      "exclude": [
+        "820d5015-a497-4f26-9bc8-94ffce14a31f"
+      ]
     }
   ],
   "road_factor": 1.3

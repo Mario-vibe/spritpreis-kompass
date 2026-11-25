@@ -182,7 +182,8 @@ const MIN_GAIN=0.5; // ab diesem Gewinn je Tankfüllung (€) gilt ein Umweg als
 function makeCalc(rows,VEH){
   const RF=S.road_factor||1.3;
   const dist=(o,v)=>v.home?(((o.x.km_by||{})[v.home])??null):o.x.km;
-  const inRange=(o,v)=>!o.x.unterwegs&&dist(o,v)!=null&&(!v.max_km||dist(o,v)<=v.max_km);
+  // in Frage kommen: nicht unterwegs, Entfernung bekannt, im Umkreis und nicht ausdrücklich ausgeschlossen
+  const inRange=(o,v)=>!o.x.unterwegs&&dist(o,v)!=null&&(!v.max_km||dist(o,v)<=v.max_km)&&!(v.exclude||[]).includes(o.x.id);
   const REF=new Map(VEH.map(v=>{const n=rows.filter(o=>o.p!=null&&inRange(o,v));
     return [v,n.length?n.reduce((a,o)=>(dist(o,v)<dist(a,v)||(dist(o,v)===dist(a,v)&&KM[o.i]<KM[a.i]))?o:a):null]}));
   const trip=(o,v)=>{const r=REF.get(v);if(!r||o.p==null||!inRange(o,v))return null;
@@ -247,7 +248,7 @@ function render(){
   $("c-rank").textContent=s.nLows>=7?`${s.rank}. von ${s.nLows+1}`:"–";
   $("p-fuel").textContent=`${name} · günstigster Preis`;
   $("p-price").innerHTML=priceHTML(last.best)+'<span style="font-size:.4em"> €</span>';
-  $("p-where").textContent=[stn[last.bi].name,[stn[last.bi].street,stn[last.bi].place].filter(Boolean).join(", "),stn[last.bi].km!=null?de(stn[last.bi].km,1)+" km":""].filter(Boolean).join(" · ");
+  $("p-where").textContent=[stn[last.bi].name,[stn[last.bi].street,stn[last.bi].place].filter(Boolean).join(", "),stn[last.bi].km!=null&&!(S.vehicles||[]).some(v=>v.fuel===fuel&&v.home)?de(stn[last.bi].km,1)+" km":""].filter(Boolean).join(" · "); // bei Mamas Kraftstoff keine km ab deinem Wohnort
   const mtn=Math.max(0,Math.round((cycStart(1)-now.getTime())/MIN));
   $("p-clock").textContent=`Stand ${hm(now)} Uhr · nächste Erhöhung in ${Math.floor(mtn/60)} h ${mtn%60} min`;
 
@@ -294,7 +295,7 @@ function render(){
     hint.innerHTML=lines.join("");hint.hidden=false;
     const homeV=VEH.filter(v=>v.home);
     note.textContent=`Spalte${VEH.length>1?"n":""} ${VEH.map(v=>v.name).join(" und ")}: Ersparnis je Tankfüllung (${VEH.map(v=>v.name+" "+v.fill_l+" l").join(", ")}) gegenüber der nächstgelegenen geöffneten Tankstelle, abzüglich Kraftstoff für den Umweg hin und zurück (Luftlinie × ${de(RF,1)}). Zeit und Verschleiß sind nicht eingerechnet. Für Tankstellen „unterwegs“ entfällt die Rechnung.`
-      +homeV.map(v=>` ${v.name}: Entfernungen ab ihrem Wohnort, auf ganze Kilometer gerundet${v.max_km?`, nur Tankstellen bis ${v.max_km} km`:""}.`).join("");
+      +homeV.map(v=>` ${v.name}: Entfernungen ab ihrem Wohnort, auf ganze Kilometer gerundet${v.max_km?`, nur Tankstellen bis ${v.max_km} km`:""}${(v.exclude||[]).length?`, ohne ${(v.exclude||[]).map(id=>{const x=S.stations.find(t=>t.id===id);return x?x.name+" "+(x.place||""):""}).filter(Boolean).join(", ")}`:""}.`).join("");
     note.hidden=false;
   }else{hint.hidden=true;note.hidden=true}
   // Feld rechts oben: sinnvollste Tankstelle je Fahrzeug, also das beste Ergebnis nach Fahrtkosten.
