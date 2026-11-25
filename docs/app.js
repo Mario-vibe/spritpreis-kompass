@@ -262,7 +262,9 @@ function render(){
   $("c-rank").textContent=s.nLows>=7?`${s.rank}. von ${s.nLows+1}`:"–";
   $("p-fuel").textContent=`${name} · günstigster Preis`;
   $("p-price").innerHTML=priceHTML(last.best)+'<span style="font-size:.4em"> €</span>';
-  $("p-where").textContent=[stn[last.bi].name,[stn[last.bi].street,stn[last.bi].place].filter(Boolean).join(", "),stn[last.bi].km!=null&&!(S.vehicles||[]).some(v=>v.fuel===fuel&&v.home)?de(stn[last.bi].km,1)+" km":""].filter(Boolean).join(" · "); // bei Mamas Kraftstoff keine km ab deinem Wohnort
+  // km im Preisfeld: bei Mamas Kraftstoff ab ihrem Wohnort, sonst ab deinem
+  const pkm=(x,sc)=>{if(sc.personal){const d=vDist(x,sc.home);return d!=null?de(d,1)+" km ab "+sc.home.name:""}return x.km!=null?de(x.km,1)+" km":""};
+  $("p-where").textContent=[stn[last.bi].name,[stn[last.bi].street,stn[last.bi].place].filter(Boolean).join(", "),pkm(stn[last.bi],F.scope)].filter(Boolean).join(" · ");
   const mtn=Math.max(0,Math.round((cycStart(1)-now.getTime())/MIN));
   $("p-clock").textContent=`Stand ${hm(now)} Uhr · nächste Erhöhung in ${Math.floor(mtn/60)} h ${mtn%60} min`;
 
@@ -335,9 +337,9 @@ function render(){
         const pre=p=>g.ps.length>1?esc(p.v.name)+": ":"";
         const vs=same?"":g.ps.map(p=>{const tc=C.trip(cheap,p.v);if(!tc)return "";const d=p.net-tc.net;
           return d>=0?`${pre(p)}<b>${eur2(d)}</b> je Tankfüllung gegenüber der Fahrt zur günstigsten`:`${pre(p)}Die Fahrt zur günstigsten brächte nur ${eur2(-d)} je Tankfüllung, das lohnt kaum`}).filter(Boolean).join(". ");
-        const showKm=x.km!=null&&g.ps.every(p=>!p.v.home);
+        const kmLabel=g.ps.every(p=>p.v.home)?(d=>d!=null?de(d,1)+" km ab "+g.ps[0].v.name:"")(vDist(x,g.ps[0].v)):g.ps.every(p=>!p.v.home)&&x.km!=null?de(x.km,1)+" km":"";
         return `<div class="price second">${priceHTML(g.o.p)}<span style="font-size:.4em"> €</span></div>
-          <div class="where">${esc([x.name,[x.street,x.place].filter(Boolean).join(", "),showKm?de(x.km,1)+" km":""].filter(Boolean).join(" · "))}</div>
+          <div class="where">${esc([x.name,[x.street,x.place].filter(Boolean).join(", "),kmLabel].filter(Boolean).join(" · "))}</div>
           <div class="p-note">für ${names(g.ps)}${same?", zugleich die günstigste":vs?`. ${vs}.`:""}</div>`}).join(`<hr class="p-sep">`);
     }
     smart.hidden=false;
