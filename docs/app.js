@@ -60,8 +60,20 @@ function marketShift(fuel,k){if(!hasMarket)return 0;const a=lagProd(fuel,cycStar
 
 /* ---------- Preisraster in 5-Minuten-Schritten ---------- */
 const KM=S.stations.map(x=>x.km!=null?x.km:1e9);
+// Tankstelle kommt für ein Fahrzeug in Frage: nicht unterwegs, Entfernung bekannt, im Umkreis, nicht ausgeschlossen
+const vDist=(x,v)=>v.home?(((x.km_by||{})[v.home])??null):x.km;
+const eligible=(x,v)=>!x.unterwegs&&vDist(x,v)!=null&&(!v.max_km||vDist(x,v)<=v.max_km)&&!(v.exclude||[]).includes(x.id);
+// Kraftstoff, der nur zu Fahrzeugen mit eigenem Wohnort gehört (Super E10 für Mama): Auswertung nur über deren Tankstellen
+function fuelScope(fuel){
+  const vf=(S.vehicles||[]).filter(v=>v.fuel===fuel);
+  const personal=vf.length>0&&vf.every(v=>v.home);
+  const allow=S.stations.map(x=>!personal||vf.some(v=>eligible(x,v)));
+  const km=S.stations.map(x=>{const d=personal?vDist(x,vf[0]):x.km;return d!=null?d:1e9});
+  return {personal,allow,km,home:personal?vf[0]:null};
+}
 const STARTS=[];for(let k=-NCYC;k<=FUT+1;k++)STARTS.push(cycStart(k));
 function buildFuel(fuel){
+  const scope=fuelScope(fuel),ALLOW=scope.allow,KMF=scope.km;
   const ev=S.stations.map(s=>(S.events[s.id]&&S.events[s.id][fuel])||[]);
   const ptr=ev.map(()=>0),cur=ev.map(()=>null);
   const t0=STARTS[0],t1=now.getTime();
@@ -72,7 +84,7 @@ function buildFuel(fuel){
     const vals=ev.map((e,i)=>{while(ptr[i]<e.length&&e[ptr[i]][0]<=ts){cur[i]=e[ptr[i]][1];ptr[i]++}return cur[i]});
     while(STARTS[ci+1]<=t)ci++;
     // Bei gleichem Preis gewinnt die nähere Tankstelle (ohne Entfernung zählt sie als am weitesten weg)
-    let bi=-1;vals.forEach((v,i)=>{if(v==null)return;if(bi<0||v<vals[bi]-0.01||(Math.abs(v-vals[bi])<=0.01&&KM[i]<KM[bi]))bi=i});
+    let bi=-1;vals.forEach((v,i)=>{if(v==null||!ALLOW[i])return;if(bi<0||v<vals[bi]-0.01||(Math.abs(v-vals[bi])<=0.01&&KMF[i]<KMF[bi]))bi=i});
     if(bi<0)continue;
     series.push({t,k:ci-NCYC,m:Math.round((t-STARTS[ci])/MIN),st:vals,best:vals[bi],bi});
   }
@@ -82,7 +94,7 @@ function buildFuel(fuel){
     let hi=-1e9,lo=1e9;a.forEach(p=>{hi=Math.max(hi,p.best);lo=Math.min(lo,p.best)});
     daily.push({k,t:cycStart(k),hi,lo:k===0?null:lo,full:a.length>=250});
   }
-  return {fuel,series,byK,daily};
+  return {fuel,series,byK,daily,scope};
 }
 const fuels=S.fuels.filter(f=>FUELNAME[f]);
 const DATA={},FC={};
@@ -181,9 +193,9 @@ const MIN_GAIN=0.5; // ab diesem Gewinn je Tankfüllung (€) gilt ein Umweg als
 // rows: [{x: Tankstelle, i: Index, p: Preis}]. Fahrzeuge mit "home" rechnen mit eigenen Entfernungen (km_by).
 function makeCalc(rows,VEH){
   const RF=S.road_factor||1.3;
-  const dist=(o,v)=>v.home?(((o.x.km_by||{})[v.home])??null):o.x.km;
+  const dist=(o,v)=>vDist(o.x,v);
   // in Frage kommen: nicht unterwegs, Entfernung bekannt, im Umkreis und nicht ausdrücklich ausgeschlossen
-  const inRange=(o,v)=>!o.x.unterwegs&&dist(o,v)!=null&&(!v.max_km||dist(o,v)<=v.max_km)&&!(v.exclude||[]).includes(o.x.id);
+  const inRange=(o,v)=>eligible(o.x,v);
   const REF=new Map(VEH.map(v=>{const n=rows.filter(o=>o.p!=null&&inRange(o,v));
     return [v,n.length?n.reduce((a,o)=>(dist(o,v)<dist(a,v)||(dist(o,v)===dist(a,v)&&KM[o.i]<KM[a.i]))?o:a):null]}));
   const trip=(o,v)=>{const r=REF.get(v);if(!r||o.p==null||!inRange(o,v))return null;
@@ -274,18 +286,19 @@ function render(){
     const c={v:v.name,st:o.x.name+" "+(o.x.place||""),fill:v.fill_l,diff:r.p-o.p,save:t.save,
       kmS:C.dist(o,v),kmR:C.dist(r,v),rf:RF,extra:t.extra,l100:v.l_per_100km,liters:t.liters,price:o.p,cost:t.cost,net:t.net,refSt:r.x.name+" "+(r.x.place||"")};
     return `<td class="gain calc ${t.net>=MIN_GAIN?"pos":t.net<=-MIN_GAIN?"neg":"flat"}" tabindex="0" data-calc="${esc(JSON.stringify(c))}">${Math.abs(t.net)<MIN_GAIN?"lohnt kaum":eur2(t.net)}</td>`};
-  $("tbl-head").innerHTML="<th>Tankstelle</th><th>km</th><th>jetzt</th><th>ggü. gestern</th><th>seit 12 Uhr</th>"+VEH.map(v=>`<th title="Ersparnis je Tankfüllung (${v.fill_l} l) abzüglich Umweg, ${de(v.l_per_100km,0)} l/100 km">${esc(v.name)}</th>`).join("");
+  $("tbl-head").innerHTML="<th>Tankstelle</th><th>"+(F.scope.personal?"km ab "+esc(F.scope.home.name):"km")+"</th><th>jetzt</th><th>ggü. gestern</th><th>seit 12 Uhr</th>"+VEH.map(v=>`<th title="Ersparnis je Tankfüllung (${v.fill_l} l) abzüglich Umweg, ${de(v.l_per_100km,0)} l/100 km">${esc(v.name)}</th>`).join("");
   const nCols=5+VEH.length;
   // Gehört der Kraftstoff nur zu Fahrzeugen mit eigenem Wohnort (Mama), zeigt die Tabelle nur deren Tankstellen
   const personal=VEH.length>0&&VEH.every(v=>v.home);
   const shown=personal&&!tblAll?rows.filter(o=>VEH.some(v=>C.inRange(o,v))):rows;
   // Sortierung: Preis aufsteigend, bei gleichem Preis die nähere zuerst; Tankstellen ohne Preis ans Ende, ebenfalls nach Entfernung
-  $("tbl").innerHTML=shown.slice().sort((a,b)=>((a.p??1e9)-(b.p??1e9))||(KM[a.i]-KM[b.i])).map(o=>{
+  const SC=F.scope,kmCell=o=>{const d=SC.km[o.i];return d>=1e9?"":SC.personal?de(d,0):de(d,1)};
+  $("tbl").innerHTML=shown.slice().sort((a,b)=>((a.p??1e9)-(b.p??1e9))||(SC.km[a.i]-SC.km[b.i])).map(o=>{
     const addr=`<div class="small muted">${esc([o.x.street,o.x.place].filter(Boolean).join(", "))}${o.x.unterwegs?" · unterwegs":""}</div>`;
-    if(o.p==null)return `<tr><td>${esc(o.x.name)}${addr}</td><td class="num">${o.x.km!=null?de(o.x.km,1):""}</td><td class="muted" colspan="${nCols-2}">geschlossen oder kein Preis</td></tr>`;
+    if(o.p==null)return `<tr><td>${esc(o.x.name)}${addr}</td><td class="num">${kmCell(o)}</td><td class="muted" colspan="${nCols-2}">geschlossen oder kein Preis</td></tr>`;
     const yp=s.yRow?s.yRow.st[o.i]:null;const d=yp!=null?o.p-yp:null;
     const peak=Math.max(...today.map(p=>p.st[o.i]).filter(v=>v!=null),o.p);const fell=peak-o.p;
-    return `<tr class="${o.i===last.bi?"best":""}"><td>${esc(o.x.name)}${o.i===last.bi?'<span class="tag">günstigste</span>':""}${addr}</td><td class="num">${o.x.km!=null?de(o.x.km,1):""}</td><td class="p">${priceHTML(o.p)}</td><td class="num ${d==null?"":cls(d)}">${d==null?"–":sgn(d)}</td><td class="num muted">${fell>0.05?"−"+de(fell,0)+" ct":"noch keine Senkung"}</td>${VEH.map(v=>gainCell(o,v)).join("")}</tr>`}).join("");
+    return `<tr class="${o.i===last.bi?"best":""}"><td>${esc(o.x.name)}${o.i===last.bi?'<span class="tag">günstigste</span>':""}${addr}</td><td class="num">${kmCell(o)}</td><td class="p">${priceHTML(o.p)}</td><td class="num ${d==null?"":cls(d)}">${d==null?"–":sgn(d)}</td><td class="num muted">${fell>0.05?"−"+de(fell,0)+" ct":"noch keine Senkung"}</td>${VEH.map(v=>gainCell(o,v)).join("")}</tr>`}).join("");
   const allBtn=$("tbl-all");
   if(personal){allBtn.hidden=false;allBtn.textContent=tblAll?`Nur ${VEH.map(v=>v.name).join(" und ")}s Tankstellen zeigen`:`Alle ${rows.length} Tankstellen zeigen`;allBtn.setAttribute("aria-pressed",tblAll)}
   else allBtn.hidden=true;
