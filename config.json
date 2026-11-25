@@ -125,7 +125,7 @@
       "name": "team",
       "street": "Bahnhofstr. 11",
       "place": "Schuby",
-      "km": 81.1,
+      "km": 81.2,
       "lat": 54.5161,
       "lng": 9.4804,
       "unterwegs": true,
@@ -174,7 +174,7 @@
       "name": "bft",
       "street": "Harksheider Weg 87",
       "place": "Quickborn",
-      "km": 13.1,
+      "km": 13.0,
       "lat": 53.727945,
       "lng": 9.911984,
       "km_by": {
@@ -199,7 +199,7 @@
       "name": "Aral",
       "street": "Hamburger Straße 123",
       "place": "Henstedt-Ulzburg",
-      "km": null,
+      "km": 6.3,
       "lat": 53.786987,
       "lng": 9.979266
     }
