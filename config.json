@@ -104,6 +104,13 @@
       "street": "Harksheider Weg 87",
       "place": "Quickborn",
       "km": null
+    },
+    {
+      "id": "7f6f2a9b-b563-4b4a-9fc7-3ea481cce518",
+      "name": "Greenline",
+      "street": "An der Autobahn 18-20",
+      "place": "Buchholz",
+      "km": null
     }
   ],
   "fuels": [
