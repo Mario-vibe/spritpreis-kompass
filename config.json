@@ -97,6 +97,13 @@
       "street": "Hamburger Str. /Edisonstr. 13",
       "place": "Henstedt-Ulzburg",
       "km": null
+    },
+    {
+      "id": "16e6477d-7796-4084-9330-b60ea4a1b629",
+      "name": "bft",
+      "street": "Harksheider Weg 87",
+      "place": "Quickborn",
+      "km": null
     }
   ],
   "fuels": [
