@@ -2,6 +2,10 @@
 
 Der Wohnort kommt aus den Umgebungsvariablen HOME_LAT und HOME_LNG und wird nicht
 gespeichert, nur die Kilometer und die Lage der Tankstellen. Braucht TK_API_KEY.
+
+Mit PROFILE (z. B. "mama") werden die Entfernungen für einen anderen Wohnort unter
+km_by[PROFILE] gespeichert, auf ganze Kilometer gerundet, damit die öffentliche Seite
+den Wohnort weniger genau verrät.
 """
 import json
 import math
@@ -27,6 +31,7 @@ def main():
         sys.exit("Breite und Länge des Wohnorts fehlen oder sind keine Zahlen.")
     if not key:
         sys.exit("TK_API_KEY fehlt.")
+    profile = os.environ.get("PROFILE", "").strip().lower()
     cfg = load_config()
     for s in cfg["stations"]:
         if s.get("lat") is None or s.get("lng") is None:
@@ -35,8 +40,13 @@ def main():
                 print(f"{s['name']}, {s.get('place')}: Lage nicht abrufbar ({data.get('message')})")
                 continue
             s["lat"], s["lng"] = data["station"]["lat"], data["station"]["lng"]
-        s["km"] = round(km_between(home[0], home[1], s["lat"], s["lng"]), 1)
-        print(f"{s['km']:6.1f} km  {s['name']}, {s.get('street')}, {s.get('place')}")
+        km = km_between(home[0], home[1], s["lat"], s["lng"])
+        if profile:
+            s.setdefault("km_by", {})[profile] = int(round(km))
+            print(f"{int(round(km)):4d} km  {s['name']}, {s.get('street')}, {s.get('place')}")
+        else:
+            s["km"] = round(km, 1)
+            print(f"{s['km']:6.1f} km  {s['name']}, {s.get('street')}, {s.get('place')}")
     save_config(cfg)
 
 

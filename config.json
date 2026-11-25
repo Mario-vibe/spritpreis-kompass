@@ -179,6 +179,14 @@
       "fuel": "diesel",
       "l_per_100km": 8,
       "fill_l": 60
+    },
+    {
+      "name": "Mama",
+      "fuel": "e10",
+      "l_per_100km": 6,
+      "fill_l": 25,
+      "home": "mama",
+      "max_km": 10
     }
   ],
   "road_factor": 1.3

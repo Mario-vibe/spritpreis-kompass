@@ -9,6 +9,11 @@ on:
       laenge:
         description: "Längengrad des Wohnorts, z. B. 9.9620 (wird nicht gespeichert)"
         required: true
+      fuer:
+        description: "Für wen? mich = deine Entfernungen (km-Spalte), Mama = ihre Entfernungen (gerundet, nur für die Empfehlung)"
+        type: choice
+        options: [mich, Mama]
+        default: mich
 
 permissions:
   contents: write
@@ -35,6 +40,7 @@ jobs:
           TK_API_KEY: ${{ secrets.TK_API_KEY }}
           HOME_LAT: ${{ inputs.breite }}
           HOME_LNG: ${{ inputs.laenge }}
+          PROFILE: ${{ inputs.fuer == 'Mama' && 'mama' || '' }}
         run: |
           cd scripts
           set -o pipefail

@@ -176,6 +176,26 @@ function barChart(el,vals,best){
     if(i===best)g+=`<text x="${x+w/2}" y="${top-5}" text-anchor="middle" class="lab">${de(v.r,2)}</text>`});
   el.innerHTML=`<svg viewBox="0 0 ${Wd} ${H}" role="img" aria-label="Korrelation nach Verzögerung in Tagen">${g}</svg><div class="small muted" style="text-align:center">Verzögerung in Tagen</div>`;
 }
+/* ---------- Rechenhilfen "lohnt die Fahrt?" ---------- */
+const MIN_GAIN=0.5; // ab diesem Gewinn je Tankfüllung (€) gilt ein Umweg als lohnend, überall gleich
+// rows: [{x: Tankstelle, i: Index, p: Preis}]. Fahrzeuge mit "home" rechnen mit eigenen Entfernungen (km_by).
+function makeCalc(rows,VEH){
+  const RF=S.road_factor||1.3;
+  const dist=(o,v)=>v.home?(((o.x.km_by||{})[v.home])??null):o.x.km;
+  const inRange=(o,v)=>!o.x.unterwegs&&dist(o,v)!=null&&(!v.max_km||dist(o,v)<=v.max_km);
+  const REF=new Map(VEH.map(v=>{const n=rows.filter(o=>o.p!=null&&inRange(o,v));
+    return [v,n.length?n.reduce((a,o)=>(dist(o,v)<dist(a,v)||(dist(o,v)===dist(a,v)&&KM[o.i]<KM[a.i]))?o:a):null]}));
+  const trip=(o,v)=>{const r=REF.get(v);if(!r||o.p==null||!inRange(o,v))return null;
+    const extra=Math.max(0,dist(o,v)-dist(r,v))*2*RF;
+    const save=v.fill_l*(r.p-o.p)/100,liters=extra*v.l_per_100km/100,cost=liters*o.p/100;
+    return {net:save-cost,save,extra,liters,cost}};
+  const pick=v=>{const r=REF.get(v);if(!r)return null;
+    const b=rows.filter(o=>o.p!=null&&inRange(o,v)).map(o=>({o,t:o.i===r.i?{net:0}:trip(o,v)})).filter(z=>z.t)
+      .sort((a,b)=>(b.t.net-a.t.net)||(dist(a.o,v)-dist(b.o,v)))[0];
+    // kleiner Gewinn zählt nicht: dann bleibt es bei der nächstgelegenen
+    return b.o.i!==r.i&&b.t.net<MIN_GAIN?{v,o:r,net:0,ref:r}:{v,o:b.o,net:b.t.net,ref:r}};
+  return {RF,dist,inRange,REF,trip,pick};
+}
 function corr(a,b){const n=a.length;if(n<5)return NaN;const ma=a.reduce((x,y)=>x+y)/n,mb=b.reduce((x,y)=>x+y)/n;let s=0,sa=0,sb=0;for(let i=0;i<n;i++){s+=(a[i]-ma)*(b[i]-mb);sa+=(a[i]-ma)**2;sb+=(b[i]-mb)**2}return s/Math.sqrt(sa*sb)}
 
 /* ---------- Auswertung ---------- */
@@ -240,25 +260,18 @@ function render(){
   $("tbl-time").textContent=`Stand ${hm(now)} Uhr`;
   const today=F.byK[0]||[];
   const rows=stn.map((x,i)=>({x,i,p:last.st[i]}));
-  // Lohnt die Fahrt? Bezug ist die nächstgelegene geöffnete Tankstelle. Gerechnet wird die Ersparnis
-  // je Tankfüllung minus Kraftstoff für den Umweg (hin und zurück, Luftlinie × Straßenfaktor).
-  // Tankstellen mit "unterwegs" liegen auf einer Strecke, die man ohnehin fährt: kein Umweg.
-  const VEH=(S.vehicles||[]).filter(v=>v.fuel===fuel), RF=S.road_factor||1.3;
-  const MIN_GAIN=0.5; // ab diesem Gewinn je Tankfüllung (€) gilt ein Umweg als lohnend, überall gleich
-  const near=rows.filter(o=>o.p!=null&&o.x.km!=null&&!o.x.unterwegs);
-  const ref=near.length?near.reduce((a,o)=>o.x.km<a.x.km?o:a):null;
-  const trip=(o,v)=>{if(!ref||o.p==null||(o.x.km==null&&!o.x.unterwegs))return null;
-    const extra=o.x.unterwegs?0:Math.max(0,o.x.km-ref.x.km)*2*RF;
-    const save=v.fill_l*(ref.p-o.p)/100, liters=extra*v.l_per_100km/100, cost=liters*o.p/100;
-    return {net:save-cost,save,extra,liters,cost}};
+  // Lohnt die Fahrt? Je Fahrzeug: Bezug ist die nächstgelegene geöffnete Tankstelle ab dessen Wohnort.
+  const VEH=(S.vehicles||[]).filter(v=>v.fuel===fuel);
+  const C=makeCalc(rows,VEH),RF=C.RF;
   const eur2=x=>(x>=0?"+":"−")+de(Math.abs(x),2)+" €";
-  const gainCell=(o,v)=>{
-    if(ref&&o.i===ref.i)return `<td class="gain flat calc" tabindex="0" data-calc="${esc(JSON.stringify({ref:1,v:v.name,st:o.x.name+" "+(o.x.place||"")}))}">Bezug</td>`;
-    if(o.x.unterwegs)return `<td class="gain flat">–</td>`; // Tankstellen unterwegs: keine Umwegrechnung
-    const t=trip(o,v);if(!t)return `<td class="gain flat">–</td>`;
-    const c={v:v.name,st:o.x.name+" "+(o.x.place||""),fill:v.fill_l,diff:ref.p-o.p,save:t.save,way:!!o.x.unterwegs,
-      kmS:o.x.km,kmR:ref.x.km,rf:RF,extra:t.extra,l100:v.l_per_100km,liters:t.liters,price:o.p,cost:t.cost,net:t.net,refSt:ref.x.name+" "+(ref.x.place||"")};
-    return `<td class="gain calc ${t.net>=0.5?"pos":t.net<=-0.5?"neg":"flat"}" tabindex="0" data-calc="${esc(JSON.stringify(c))}">${Math.abs(t.net)<MIN_GAIN?"lohnt kaum":eur2(t.net)}</td>`};
+  const kmTxt=(o,v)=>v.home?(C.dist(o,v)<1?"unter 1 km":"ca. "+de(C.dist(o,v),0)+" km"):de(C.dist(o,v),1)+" km";
+  const gainCell=(o,v)=>{const r=C.REF.get(v);
+    if(r&&o.i===r.i)return `<td class="gain flat calc" tabindex="0" data-calc="${esc(JSON.stringify({ref:1,v:v.name,st:o.x.name+" "+(o.x.place||"")}))}">Bezug</td>`;
+    if(!C.inRange(o,v))return `<td class="gain flat">–</td>`; // unterwegs, außerhalb des Umkreises oder ohne Entfernung
+    const t=C.trip(o,v);if(!t)return `<td class="gain flat">–</td>`;
+    const c={v:v.name,st:o.x.name+" "+(o.x.place||""),fill:v.fill_l,diff:r.p-o.p,save:t.save,
+      kmS:C.dist(o,v),kmR:C.dist(r,v),rf:RF,extra:t.extra,l100:v.l_per_100km,liters:t.liters,price:o.p,cost:t.cost,net:t.net,refSt:r.x.name+" "+(r.x.place||"")};
+    return `<td class="gain calc ${t.net>=MIN_GAIN?"pos":t.net<=-MIN_GAIN?"neg":"flat"}" tabindex="0" data-calc="${esc(JSON.stringify(c))}">${Math.abs(t.net)<MIN_GAIN?"lohnt kaum":eur2(t.net)}</td>`};
   $("tbl-head").innerHTML="<th>Tankstelle</th><th>km</th><th>jetzt</th><th>ggü. gestern</th><th>seit 12 Uhr</th>"+VEH.map(v=>`<th title="Ersparnis je Tankfüllung (${v.fill_l} l) abzüglich Umweg, ${de(v.l_per_100km,0)} l/100 km">${esc(v.name)}</th>`).join("");
   const nCols=5+VEH.length;
   // Sortierung: Preis aufsteigend, bei gleichem Preis die nähere zuerst; Tankstellen ohne Preis ans Ende, ebenfalls nach Entfernung
@@ -270,25 +283,24 @@ function render(){
     return `<tr class="${o.i===last.bi?"best":""}"><td>${esc(o.x.name)}${o.i===last.bi?'<span class="tag">günstigste</span>':""}${addr}</td><td class="num">${o.x.km!=null?de(o.x.km,1):""}</td><td class="p">${priceHTML(o.p)}</td><td class="num ${d==null?"":cls(d)}">${d==null?"–":sgn(d)}</td><td class="num muted">${fell>0.05?"−"+de(fell,0)+" ct":"noch keine Senkung"}</td>${VEH.map(v=>gainCell(o,v)).join("")}</tr>`}).join("");
   // Empfehlung über der Tabelle
   const hint=$("tbl-hint"),note=$("tbl-note");
-  if(VEH.length&&ref){
-    const lines=VEH.map(v=>{
-      const c=rows.filter(o=>o.i!==ref.i&&!o.x.unterwegs).map(o=>({o,t:trip(o,v)})).filter(z=>z.t).sort((a,b)=>b.t.net-a.t.net)[0];
-      const refTxt=`${esc(ref.x.name)} ${esc(ref.x.place||"")} (${de(ref.x.km,1)} km)`;
+  if(VEH.length){
+    const lines=VEH.map(v=>{const r=C.REF.get(v);
+      if(!r)return `<div><b>${esc(v.name)}:</b> ${v.home&&!rows.some(o=>C.dist(o,v)!=null)?"Entfernungen noch nicht berechnet.":"Keine geöffnete Tankstelle im Umkreis."}</div>`;
+      const c=rows.filter(o=>o.i!==r.i&&C.inRange(o,v)).map(o=>({o,t:C.trip(o,v)})).filter(z=>z.t).sort((a,b)=>b.t.net-a.t.net)[0];
+      const refTxt=`${esc(r.x.name)} ${esc(r.x.place||"")} (${kmTxt(r,v)})`;
       if(c&&c.t.net>0.05&&c.t.net<MIN_GAIN)return `<div><b>${esc(v.name)}:</b> Am besten bei ${refTxt}. Die Fahrt zu ${esc(c.o.x.name)} ${esc(c.o.x.place||"")} brächte nur ${eur2(c.t.net)} je Tankfüllung, das lohnt kaum.</div>`;
       if(!c||c.t.net<MIN_GAIN)return `<div><b>${esc(v.name)}:</b> Kein Umweg lohnt sich gerade, am besten bei ${refTxt}.</div>`;
       return `<div><b>${esc(v.name)}:</b> Fahrt zu ${esc(c.o.x.name)} ${esc(c.o.x.place||"")} lohnt sich, <b>${eur2(c.t.net)}</b> je Tankfüllung (${v.fill_l} l) gegenüber ${refTxt}, Umweg etwa ${de(c.t.extra,0)} km.</div>`});
     hint.innerHTML=lines.join("");hint.hidden=false;
-    note.textContent=`Spalten ${VEH.map(v=>v.name).join(" und ")}: Ersparnis je Tankfüllung (${VEH.map(v=>v.name+" "+v.fill_l+" l").join(", ")}) gegenüber der nächstgelegenen geöffneten Tankstelle, abzüglich Kraftstoff für den Umweg hin und zurück (Luftlinie × ${de(RF,1)}). Zeit und Verschleiß sind nicht eingerechnet. Für Tankstellen „unterwegs“ entfällt die Rechnung.`;note.hidden=false;
+    const homeV=VEH.filter(v=>v.home);
+    note.textContent=`Spalte${VEH.length>1?"n":""} ${VEH.map(v=>v.name).join(" und ")}: Ersparnis je Tankfüllung (${VEH.map(v=>v.name+" "+v.fill_l+" l").join(", ")}) gegenüber der nächstgelegenen geöffneten Tankstelle, abzüglich Kraftstoff für den Umweg hin und zurück (Luftlinie × ${de(RF,1)}). Zeit und Verschleiß sind nicht eingerechnet. Für Tankstellen „unterwegs“ entfällt die Rechnung.`
+      +homeV.map(v=>` ${v.name}: Entfernungen ab ihrem Wohnort, auf ganze Kilometer gerundet${v.max_km?`, nur Tankstellen bis ${v.max_km} km`:""}.`).join("");
+    note.hidden=false;
   }else{hint.hidden=true;note.hidden=true}
   // Feld rechts oben: sinnvollste Tankstelle je Fahrzeug, also das beste Ergebnis nach Fahrtkosten.
-  // Gezählt werden nur Tankstellen in der Nähe (nicht "unterwegs"); bei Gleichstand die nähere.
   const smart=$("p-smart");
-  const cand=rows.filter(o=>o.p!=null&&o.x.km!=null&&!o.x.unterwegs);
-  if(VEH.length&&ref&&cand.length){
-    const picks=VEH.map(v=>{const b=cand.map(o=>({o,t:o.i===ref.i?{net:0}:trip(o,v)})).filter(z=>z.t)
-      .sort((a,b)=>(b.t.net-a.t.net)||(KM[a.o.i]-KM[b.o.i]))[0];
-      // gleiche Schwelle wie in der Empfehlung über der Tabelle: kleiner Gewinn zählt nicht
-      return b.o.i!==ref.i&&b.t.net<MIN_GAIN?{v,o:ref,net:0}:{v,o:b.o,net:b.t.net}});
+  const picks=VEH.map(v=>C.pick(v)).filter(Boolean);
+  if(picks.length){
     const groups=[];picks.forEach(p=>{const g=groups.find(g=>g.o.i===p.o.i);if(g)g.ps.push(p);else groups.push({o:p.o,ps:[p]})});
     const names=a=>a.map(p=>esc(p.v.name)).join(" und ");
     const cheap=rows.find(o=>o.i===last.bi);
@@ -299,10 +311,11 @@ function render(){
         const x=g.o.x;
         const same=g.o.i===last.bi;
         const pre=p=>g.ps.length>1?esc(p.v.name)+": ":"";
-        const vs=same?"":g.ps.map(p=>{const tc=cheap.x.unterwegs?null:trip(cheap,p.v);if(!tc)return "";const d=p.net-tc.net;
+        const vs=same?"":g.ps.map(p=>{const tc=C.trip(cheap,p.v);if(!tc)return "";const d=p.net-tc.net;
           return d>=0?`${pre(p)}<b>${eur2(d)}</b> je Tankfüllung gegenüber der Fahrt zur günstigsten`:`${pre(p)}Die Fahrt zur günstigsten brächte nur ${eur2(-d)} je Tankfüllung, das lohnt kaum`}).filter(Boolean).join(". ");
+        const showKm=x.km!=null&&g.ps.every(p=>!p.v.home);
         return `<div class="price second">${priceHTML(g.o.p)}<span style="font-size:.4em"> €</span></div>
-          <div class="where">${esc([x.name,[x.street,x.place].filter(Boolean).join(", "),x.km!=null?de(x.km,1)+" km":""].filter(Boolean).join(" · "))}</div>
+          <div class="where">${esc([x.name,[x.street,x.place].filter(Boolean).join(", "),showKm?de(x.km,1)+" km":""].filter(Boolean).join(" · "))}</div>
           <div class="p-note">für ${names(g.ps)}${same?", zugleich die günstigste":vs?`. ${vs}.`:""}</div>`}).join(`<hr class="p-sep">`);
     }
     smart.hidden=false;
@@ -385,7 +398,15 @@ function render(){
     $("mama-text").innerHTML=good
       ?`<b style="color:var(--good)">Guter Preis.</b> Super E10 kostet gerade ${priceTxt(el.best)} bei ${esc(where)}, Platz ${es.rank} der letzten ${es.nLows} Tagestiefs.`
       :`Super E10 kostet gerade ${priceTxt(el.best)} bei ${esc(where)}`+(es.nLows>=7?`, Platz ${es.rank} der letzten ${es.nLows} Tagestiefs. Kein besonders günstiger Preis.`:".");
-    window.__mama=`Hallo Mama, Super E10 kostet gerade ${priceTxt(el.best)} bei ${where}. Das ist ${good?"günstig":"ein normaler Preis"} im Vergleich zum letzten Monat. Am günstigsten ist es meist kurz vor 12 Uhr.`+(inRabatt(now.getTime())&&dLeft<=21?` Vor dem ${dm(RE)} volltanken, danach wird es rund ${de(cutGross,0)} Cent teurer.`:"");
+    const MV=(S.vehicles||[]).find(v=>v.fuel==="e10"&&v.home);
+    let tip="",tipHTML="";
+    if(MV){const pk=makeCalc(stn.map((x,i)=>({x,i,p:el.st[i]})),[MV]).pick(MV);
+      if(pk){const w=[pk.o.x.name,pk.o.x.street,pk.o.x.place].filter(Boolean).join(", ");
+        const why=pk.o.i!==pk.ref.i?` Das lohnt sich trotz Umweg, etwa ${de(pk.net,2)} € gespart bei ${MV.fill_l} Litern.`:" Ein Umweg zu einer günstigeren Tankstelle lohnt sich bei "+MV.fill_l+" Litern gerade nicht.";
+        tip=` Für dich am sinnvollsten: ${w} für ${priceTxt(pk.o.p)}.${why}`;
+        tipHTML=`<br><b>Für Mama am sinnvollsten:</b> ${esc(w)}, ${priceTxt(pk.o.p)}.${esc(why)}`}}
+    $("mama-text").innerHTML+=tipHTML;
+    window.__mama=`Hallo Mama, Super E10 kostet gerade ${priceTxt(el.best)} bei ${where}. Das ist ${good?"günstig":"ein normaler Preis"} im Vergleich zum letzten Monat. Am günstigsten ist es meist kurz vor 12 Uhr.`+tip+(inRabatt(now.getTime())&&dLeft<=21?` Vor dem ${dm(RE)} volltanken, danach wird es rund ${de(cutGross,0)} Cent teurer.`:"");
   }
 }
 /* ---------- Info-Fenster mit der Rechnung "lohnt die Fahrt?" ---------- */
