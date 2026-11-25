@@ -308,13 +308,21 @@ function render(){
   // Empfehlung über der Tabelle
   const hint=$("tbl-hint"),note=$("tbl-note");
   if(VEH.length){
+    // Gleiche Einschätzung wie im Feld rechts oben: sinnvollste Tankstelle (mit Fahrtkosten),
+    // verglichen mit der Fahrt zur günstigsten Tankstelle
+    const cheapRow=rows.find(o=>o.i===last.bi);
     const lines=VEH.map(v=>{const r=C.REF.get(v);
       if(!r)return `<div><b>${esc(v.name)}:</b> ${v.home&&!rows.some(o=>C.dist(o,v)!=null)?"Entfernungen noch nicht berechnet.":"Keine geöffnete Tankstelle im Umkreis."}</div>`;
-      const c=rows.filter(o=>o.i!==r.i&&C.inRange(o,v)).map(o=>({o,t:C.trip(o,v)})).filter(z=>z.t).sort((a,b)=>b.t.net-a.t.net)[0];
-      const refTxt=`${esc(r.x.name)} ${esc(r.x.place||"")} (${kmTxt(r,v)})`;
-      if(c&&c.t.net>0.05&&c.t.net<MIN_GAIN)return `<div><b>${esc(v.name)}:</b> Am besten bei ${refTxt}. Die Fahrt zu ${esc(c.o.x.name)} ${esc(c.o.x.place||"")} brächte nur ${eur2(c.t.net)} je Tankfüllung, das lohnt kaum.</div>`;
-      if(!c||c.t.net<MIN_GAIN)return `<div><b>${esc(v.name)}:</b> Kein Umweg lohnt sich gerade, am besten bei ${refTxt}.</div>`;
-      return `<div><b>${esc(v.name)}:</b> Fahrt zu ${esc(c.o.x.name)} ${esc(c.o.x.place||"")} lohnt sich, <b>${eur2(c.t.net)}</b> je Tankfüllung (${v.fill_l} l) gegenüber ${refTxt}, Umweg etwa ${de(c.t.extra,0)} km.</div>`});
+      const pk=C.pick(v),x=pk.o.x;
+      const best=`<b>${esc(x.name)} ${esc(x.place||"")}</b> (${kmTxt(pk.o,v)}, ${priceTxt(pk.o.p)})`;
+      if(pk.o.i===last.bi)return `<div><b>${esc(v.name)}:</b> Am sinnvollsten ist ${best}, zugleich die günstigste.</div>`;
+      const cheapTxt=`${esc(cheapRow.x.name)} ${esc(cheapRow.x.place||"")}`;
+      const tc=C.trip(cheapRow,v);
+      if(!tc)return `<div><b>${esc(v.name)}:</b> Am sinnvollsten ist ${best}. Die günstigste (${cheapTxt}) liegt ${cheapRow.x.unterwegs?"nur unterwegs":"außerhalb der Auswahl"}.</div>`;
+      const d=pk.net-tc.net;
+      return `<div><b>${esc(v.name)}:</b> Am sinnvollsten ist ${best}. `+(d>=0
+        ?`Gegenüber der Fahrt zur günstigsten (${cheapTxt}) <b>${eur2(d)}</b> je Tankfüllung (${v.fill_l} l).</div>`
+        :`Die Fahrt zur günstigsten (${cheapTxt}) brächte nur ${eur2(-d)} je Tankfüllung (${v.fill_l} l), das lohnt kaum.</div>`)});
     hint.innerHTML=lines.join("");hint.hidden=false;
     const homeV=VEH.filter(v=>v.home);
     note.textContent=`Spalte${VEH.length>1?"n":""} ${VEH.map(v=>v.name).join(" und ")}: Ersparnis je Tankfüllung (${VEH.map(v=>v.name+" "+v.fill_l+" l").join(", ")}) gegenüber der nächstgelegenen geöffneten Tankstelle, abzüglich Kraftstoff für den Umweg hin und zurück (Luftlinie × ${de(RF,1)}). Zeit und Verschleiß sind nicht eingerechnet. Für Tankstellen „unterwegs“ entfällt die Rechnung.`
