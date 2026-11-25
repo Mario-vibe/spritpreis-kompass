@@ -452,16 +452,18 @@ let calcFor=null,calcAt=0;
 function calcHTML(c){
   const e=x=>de(x,2)+" €";
   const row=(k,v,cl="")=>`<div class="ct-row ${cl}"><span>${k}</span><span>${v}</span></div>`;
-  const block=(t,label)=>`<div class="ct-sub">${label}</div>`
+  // jede Rechnung in einem eigenen Kästchen mit eigener Überschrift
+  const box=(t,head)=>`<div class="ct-box"><div class="ct-head">${head}</div>`
     +row(`Tankfüllung: ${de(c.fill,0)} l × ${de(t.p/100,3)} €`,e(t.fuel))
     +`<div class="ct-calc">Hin und zurück: 2 × ${de(t.km,1)} km × ${de(c.rf,1)} ≈ ${de(t.kmRound,1)} km, ${de(c.l100,0)} l/100 km ≈ ${de(t.l,2)} l</div>`
     +row("Kraftstoff für die Fahrt",e(t.drive))
-    +row("Summe",e(t.sum),"ct-sum");
-  let h=`<div class="ct-title">${esc(c.v)} · ${esc(c.me.name)}</div>`+block(c.me,"Kosten je Tankfüllung samt Fahrt");
-  if(c.isBest)return h+`<p>Das ist die sinnvollste Tankstelle für ${esc(c.v)}.</p>`;
-  h+=block(c.best,`Zum Vergleich die sinnvollste: ${esc(c.best.name)}`);
-  h+=`<div class="ct-row ct-sum ${c.d<=-MIN_GAIN?"neg":""}"><span>Unterschied je Tankfüllung</span><span>${c.d>=0?"+":"−"}${e(Math.abs(c.d))}</span></div>`;
-  if(Math.abs(c.d)<MIN_GAIN&&c.d>0)h+=`<p>Etwas günstiger als die sinnvollste, aber unter ${de(MIN_GAIN,2)} €: Der Umweg lohnt kaum.</p>`;
+    +row("Summe",e(t.sum),"ct-sum")+`</div>`;
+  let h=`<div class="ct-title">${esc(c.v)} · ${esc(c.me.name)}</div>`;
+  if(c.isBest)return h+box(c.me,"Diese Tankstelle")+`<p>Das ist die sinnvollste Tankstelle für ${esc(c.v)}.</p>`;
+  h+=box(c.me,"Diese Tankstelle")+box(c.best,`Sinnvollste: ${esc(c.best.name)}`);
+  if(c.d<0)h+=`<div class="ct-row ct-result neg"><span>Nachteil diese Tankstelle</span><span>${e(-c.d)}</span></div>`;
+  else h+=`<div class="ct-row ct-result"><span>Vorteil diese Tankstelle</span><span>${e(c.d)}</span></div>`
+    +`<p>Weniger als ${de(MIN_GAIN,2)} € gegenüber der nächstgelegenen Tankstelle: Der Umweg lohnt kaum, deshalb ist sie nicht die sinnvollste.</p>`;
   return h;
 }
 function showCalc(td){
