@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Läuft per cron auf dem Raspberry Pi (alle 5 Minuten) und stößt bei GitHub den Ablauf
+# Läuft per cron auf dem Raspberry Pi (alle 10 Minuten) und stößt bei GitHub den Ablauf
 # "Preise abrufen" an. GitHubs eigener Zeitplan ist zu unzuverlässig.
 #
 # Braucht einen Fine-grained Personal Access Token mit der einzigen Berechtigung

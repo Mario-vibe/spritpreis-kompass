@@ -2,7 +2,7 @@ name: Preise abrufen
 
 on:
   schedule:
-    # Reserve: Den eigentlichen Takt (alle 5 Minuten) gibt der Raspberry Pi vor, weil GitHub
+    # Reserve: Den eigentlichen Takt (alle 10 Minuten) gibt der Raspberry Pi vor, weil GitHub
     # zeitgesteuerte Abläufe oft stark verzögert oder auslässt.
     - cron: "*/30 * * * *"
   workflow_dispatch:

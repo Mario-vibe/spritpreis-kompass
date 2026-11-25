@@ -8,7 +8,7 @@ Alles läuft kostenlos bei GitHub. Ein eigenes Gerät oder ein Server ist nicht 
 
 | Was | Wann | Woher |
 |---|---|---|
-| Aktuelle Preise der eigenen Tankstellen | alle 5 Minuten (angestoßen vom Raspberry Pi) | Tankerkönig-API (Markttransparenzstelle) |
+| Aktuelle Preise der eigenen Tankstellen | alle 10 Minuten (angestoßen vom Raspberry Pi) | Tankerkönig-API (Markttransparenzstelle) |
 | Rohöl, Großhandel, Euro-Dollar-Kurs | täglich früh | US-Energiebehörde EIA (wöchentlich ergänzt) und Europäische Zentralbank |
 | Historische Preise (optional) | täglich früh | Tankerkönig-Datenbestand |
 
@@ -54,10 +54,10 @@ Wer sofort Monate an Vergangenheit möchte: Tankerkönig stellt alle Preisänder
 
 Dann **Marktdaten und Historie** mit `tage = 120` starten.
 
-## Takt alle 5 Minuten über den Raspberry Pi
+## Takt alle 10 Minuten über den Raspberry Pi
 
 GitHub startet zeitgesteuerte Abläufe oft stark verspätet oder gar nicht. Deshalb stößt ein
-Raspberry Pi den Ablauf „Preise abrufen“ alle 5 Minuten von außen an. GitHubs eigener Zeitplan
+Raspberry Pi den Ablauf „Preise abrufen“ alle 10 Minuten von außen an. GitHubs eigener Zeitplan
 (alle 30 Minuten) bleibt als Reserve. Veröffentlicht wird nur, wenn sich ein Preis geändert hat,
 sonst spätestens alle 30 Minuten. Tankerkönig wird höchstens alle 4,5 Minuten gefragt.
 
@@ -71,7 +71,7 @@ sonst spätestens alle 30 Minuten. Tankerkönig wird höchstens alle 4,5 Minuten
 3. **Skript holen:** `curl -fsSL -o ~/spritpreis-anstossen.sh https://raw.githubusercontent.com/Mario-vibe/spritpreis-kompass/main/pi/anstossen.sh && chmod +x ~/spritpreis-anstossen.sh`
 4. **Testen:** `~/spritpreis-anstossen.sh && echo ok` (bei Erfolg erscheint nur `ok`).
 5. **Zeitplan:** `crontab -e`, Zeile anfügen:
-   `*/5 * * * * $HOME/spritpreis-anstossen.sh >> $HOME/spritpreis.log 2>&1`
+   `*/10 * * * * $HOME/spritpreis-anstossen.sh >> $HOME/spritpreis.log 2>&1`
 
 Ins Protokoll `~/spritpreis.log` wird nur bei Fehlern geschrieben.
 
@@ -93,7 +93,7 @@ scripts/import_history.py   historische Tankerkönig-Daten übernehmen
 scripts/find_stations.py    Tankstellen im Umkreis suchen
 scripts/build_site.py       docs/data/site.json erzeugen
 scripts/demo_data.py        Beispieldaten erzeugen
-pi/anstossen.sh             stößt auf dem Raspberry Pi alle 5 Minuten den Preisabruf an
+pi/anstossen.sh             stößt auf dem Raspberry Pi alle 10 Minuten den Preisabruf an
 docs/                       die Webseite
 .github/workflows/          die drei automatischen Abläufe
 ```
