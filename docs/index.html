@@ -104,6 +104,10 @@ td{padding:10px;border-bottom:1px solid var(--grid);vertical-align:middle;white-
 td.p{font-family:var(--f-display);font-size:1.35rem;font-weight:600;font-variant-numeric:tabular-nums}
 td.p sup{font-size:.6em}
 tr.best td{background:var(--accent-soft)}
+.trip{display:grid;gap:6px;background:var(--accent-soft);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:.92rem}
+.trip b{font-weight:600}
+td.gain{font-variant-numeric:tabular-nums;font-weight:600}
+td.gain.pos{color:var(--good)} td.gain.neg{color:var(--bad)} td.gain.flat{color:var(--ink-3);font-weight:400}
 .tag{font-size:.72rem;font-weight:600;color:var(--accent);margin-left:6px}
 .horizon{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
 @media (max-width:820px){.horizon{grid-template-columns:1fr}}
@@ -181,8 +185,7 @@ footer{font-size:.8rem;color:var(--ink-3)}
     </div>
   </section>
 
-  <div class="grid2">
-    <section class="panel">
+  <section class="panel">
       <div class="panel-head"><h2>Heute, gestern und der übliche Tag</h2></div>
       <p class="small muted" style="margin-bottom:8px">Ein Preistag beginnt um 12 Uhr mit der einzigen erlaubten Erhöhung und fällt dann bis zum nächsten Mittag.</p>
       <div class="chart" id="ch-day"></div>
@@ -191,15 +194,17 @@ footer{font-size:.8rem;color:var(--ink-3)}
         <span><i class="sw" style="background:var(--s2)"></i>gestern</span>
         <span><i class="sw" style="background:var(--s3)"></i>Ø letzte 14 Tage</span>
       </div>
-    </section>
-    <section class="panel">
+  </section>
+
+  <section class="panel">
       <div class="panel-head"><h2>Tankstellen</h2><span class="small muted" id="tbl-time"></span></div>
+      <div id="tbl-hint" class="trip" hidden></div>
       <div class="tbl"><table>
-        <thead><tr><th>Tankstelle</th><th>km</th><th>jetzt</th><th>ggü. gestern</th><th>seit 12 Uhr</th></tr></thead>
+        <thead><tr id="tbl-head"><th>Tankstelle</th><th>km</th><th>jetzt</th><th>ggü. gestern</th><th>seit 12 Uhr</th></tr></thead>
         <tbody id="tbl"></tbody>
       </table></div>
-    </section>
-  </div>
+      <p class="small muted" id="tbl-note" style="margin-top:10px" hidden></p>
+  </section>
 
   <section class="panel">
     <div class="panel-head">

@@ -51,6 +51,8 @@ def main():
         "events": events,
         "market": market,
         "market_meta": market_meta,
+        "vehicles": cfg.get("vehicles", []),
+        "road_factor": cfg.get("road_factor", 1.3),
     }
     (DOCS / "data").mkdir(parents=True, exist_ok=True)
     with open(DOCS / "data" / "site.json", "w", encoding="utf-8") as f:

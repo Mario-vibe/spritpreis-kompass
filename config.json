@@ -97,7 +97,8 @@
       "place": "Schuby",
       "km": 81.1,
       "lat": 54.5161,
-      "lng": 9.4804
+      "lng": 9.4804,
+      "unterwegs": true
     },
     {
       "id": "005056ba-7cb6-1ed2-bceb-5332ab168d12",
@@ -142,7 +143,8 @@
       "place": "Buchholz",
       "km": 131.4,
       "lat": 52.6715,
-      "lng": 9.6891
+      "lng": 9.6891,
+      "unterwegs": true
     }
   ],
   "fuels": [
@@ -164,5 +166,20 @@
       "e10": 13.6,
       "e5": 14.2
     }
-  }
+  },
+  "vehicles": [
+    {
+      "name": "Opel",
+      "fuel": "diesel",
+      "l_per_100km": 6,
+      "fill_l": 40
+    },
+    {
+      "name": "Bulli",
+      "fuel": "diesel",
+      "l_per_100km": 8,
+      "fill_l": 60
+    }
+  ],
+  "road_factor": 1.3
 }
