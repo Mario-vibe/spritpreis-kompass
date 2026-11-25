@@ -14,6 +14,7 @@
       z. B. gegen 10:30 Uhr, höchstens einmal am Tag, wenn die sinnvollste Tankstelle zu den günstigsten
       20 % der letzten 30 Tage gehört. Wege: App „ntfy“ (einfach, empfohlen) oder Web-Push direkt aus der
       Web-App (aufwendiger). Offen: eigener Kanal für Mama (E10)? Uhrzeit?
-- [ ] **Schlüssel des Raspberry Pi erneuern:** Der Fine-grained Token für den 5-Minuten-Anstoß läuft ab.
-      Ablaufdatum hier eintragen: ________. Vorher bei GitHub neu erstellen und auf dem Pi in
-      `~/.config/spritpreis/github-token` ersetzen.
+- [ ] **Schlüssel des Raspberry Pi erneuern bis 23.02.2027:** Der Fine-grained Token für den Anstoß alle
+      10 Minuten läuft an diesem Tag ab. Etwa Mitte Februar bei GitHub einen neuen erstellen (gleiche
+      Einstellungen: nur dieses Repository, nur „Actions: Read and write“) und auf dem Pi in
+      `~/.config/spritpreis/github-token` ersetzen. Danach den alten Schlüssel bei GitHub löschen.
