@@ -1,12 +1,66 @@
 {
-  "stations": [],
-  "fuels": ["diesel", "e10"],
+  "stations": [
+    {
+      "id": "02edb62c-c4a7-4406-98be-2927b7619c53",
+      "name": "Shell",
+      "street": "Kieler Str. 40",
+      "place": "Kaltenkirchen",
+      "km": 0.7
+    },
+    {
+      "id": "6b154047-f80c-46c9-93b4-7632f019be6f",
+      "name": "ARAL",
+      "street": "Kieler Straße 51-53",
+      "place": "Kaltenkirchen",
+      "km": 0.7
+    },
+    {
+      "id": "005056ba-7cb6-1ed2-bceb-5fa30d83cd1b",
+      "name": "FAMILA",
+      "street": "Kisdorfer Weg 13",
+      "place": "Kaltenkirchen",
+      "km": 1.9
+    },
+    {
+      "id": "b54c85ea-b5e2-4443-b5aa-bca723ad8705",
+      "name": "ARAL",
+      "street": "Rudolf-Diesel-Straße 2",
+      "place": "Henstedt-Ulzburg",
+      "km": 4.4
+    },
+    {
+      "id": "51d4b4c0-a095-1aa0-e100-80009459e03a",
+      "name": "Supermarkt-Tankstelle",
+      "street": "GUTENBERGSTR. 7A",
+      "place": "HENSTEDT ULZBURG",
+      "km": 4.6
+    },
+    {
+      "id": "820d5015-a497-4f26-9bc8-94ffce14a31f",
+      "name": "AVIA XPress",
+      "street": "Henstedter Straße 2",
+      "place": "Kisdorf",
+      "km": 5
+    }
+  ],
+  "fuels": [
+    "diesel",
+    "e10"
+  ],
   "days_on_page": 120,
   "tax": {
     "rabatt_start": "2026-10-01",
     "rabatt_end": "2027-01-01",
     "cut_ct": 14.04,
-    "energy_tax_ct": {"diesel": 47.04, "e10": 65.45, "e5": 65.45},
-    "co2_ct": {"diesel": 15.9, "e10": 13.6, "e5": 14.2}
+    "energy_tax_ct": {
+      "diesel": 47.04,
+      "e10": 65.45,
+      "e5": 65.45
+    },
+    "co2_ct": {
+      "diesel": 15.9,
+      "e10": 13.6,
+      "e5": 14.2
+    }
   }
 }
