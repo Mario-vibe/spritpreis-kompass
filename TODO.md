@@ -10,6 +10,3 @@
       (kostenpflichtig) die Prognose verbessern, bei einer Woche oder mehr lohnt sich das nicht.
 - [ ] **Historische Preise (optional):** Bei Tankerkönig nach Zugang zum Datenbestand fragen. Damit
       ließe sich die Vergangenheit sofort auffüllen statt über Wochen zu sammeln.
-- [ ] **Zeile „Unterwegs günstiger“ entscheiden:** Soll die Zeile „Unterwegs günstiger: …“ für Schuby
-      und Buchholz in der Empfehlungsbox über der Tabelle bleiben? Sie ist ein reiner Preisvergleich
-      ohne Umwegrechnung und erscheint, wenn eine der beiden mindestens 1 ct günstiger ist.

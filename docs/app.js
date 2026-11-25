@@ -277,8 +277,6 @@ function render(){
       if(c&&c.t.net>0.05&&c.t.net<MIN_GAIN)return `<div><b>${esc(v.name)}:</b> Am besten bei ${refTxt}. Die Fahrt zu ${esc(c.o.x.name)} ${esc(c.o.x.place||"")} brächte nur ${eur2(c.t.net)} je Tankfüllung, das lohnt kaum.</div>`;
       if(!c||c.t.net<MIN_GAIN)return `<div><b>${esc(v.name)}:</b> Kein Umweg lohnt sich gerade, am besten bei ${refTxt}.</div>`;
       return `<div><b>${esc(v.name)}:</b> Fahrt zu ${esc(c.o.x.name)} ${esc(c.o.x.place||"")} lohnt sich, <b>${eur2(c.t.net)}</b> je Tankfüllung (${v.fill_l} l) gegenüber ${refTxt}, Umweg etwa ${de(c.t.extra,0)} km.</div>`});
-    const way=rows.filter(o=>o.x.unterwegs&&o.p!=null&&ref.p-o.p>=1).map(o=>`${esc(o.x.name)} ${esc(o.x.place||"")} ${de(ref.p-o.p,0)} ct`);
-    if(way.length)lines.push(`<div><b>Unterwegs günstiger:</b> ${way.join(", ")} unter ${esc(ref.x.name)} ${esc(ref.x.place||"")}.</div>`);
     hint.innerHTML=lines.join("");hint.hidden=false;
     note.textContent=`Spalten ${VEH.map(v=>v.name).join(" und ")}: Ersparnis je Tankfüllung (${VEH.map(v=>v.name+" "+v.fill_l+" l").join(", ")}) gegenüber der nächstgelegenen geöffneten Tankstelle, abzüglich Kraftstoff für den Umweg hin und zurück (Luftlinie × ${de(RF,1)}). Zeit und Verschleiß sind nicht eingerechnet. Für Tankstellen „unterwegs“ entfällt die Rechnung.`;note.hidden=false;
   }else{hint.hidden=true;note.hidden=true}
