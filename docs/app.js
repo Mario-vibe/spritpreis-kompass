@@ -621,6 +621,20 @@ document.addEventListener("visibilitychange",()=>{if(document.visibilityState===
 window.addEventListener("pageshow",e=>{if(e.persisted)checkUpdate()});
 setInterval(()=>{if(document.visibilityState==="visible")checkUpdate()},120000);
 $("reload").addEventListener("click",()=>{const b=$("reload");b.disabled=true;b.textContent="Lädt …";location.reload()});
+/* ---------- Nachrichtenlage (data/news.json, von einer geplanten Claude-Aufgabe geschrieben) ---------- */
+async function loadNews(){
+  let n;try{const r=await fetch("data/news.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)return;n=await r.json()}catch(e){return}
+  if(!n||!Array.isArray(n.items)||!n.items.length)return;
+  const t=new Date(n.updated);const ageH=(Date.now()-t.getTime())/HOUR;
+  $("news-time").textContent=isNaN(t)?"":`Stand ${dm(t)}, ${hm(t)} Uhr`+(ageH>16?" · veraltet":"");
+  const T={steigend:["up","Nachrichtenlage: eher steigende Ölpreise"],fallend:["down","Nachrichtenlage: eher fallende Ölpreise"],"seitwärts":["flat","Nachrichtenlage: keine klare Richtung"],unklar:["flat","Nachrichtenlage: keine klare Richtung"]}[n.tendenz]||null;
+  $("news-tend").innerHTML=T?`<span class="news-tend ${T[0]}"><i></i><span>${T[1]}${n.tendenz_text?" · "+esc(n.tendenz_text):""}</span></span>`:"";
+  const safeUrl=u=>/^https:\/\//.test(u||"")?u:null;
+  $("news-list").innerHTML=n.items.slice(0,8).map(it=>{const u=safeUrl(it.url);
+    return `<li><span>${esc(it.text||"")} <span class="src">${u?`<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(it.source||"Quelle")} ↗</a>`:esc(it.source||"")}</span></span></li>`}).join("");
+  $("news").hidden=false;
+}
+loadNews();
 render();
 checkVersion();
 })();

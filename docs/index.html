@@ -156,6 +156,13 @@ td.calc:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .calc-tip .si-pill.no{background:var(--bad-bg);color:var(--bad)}
 .calc-tip .si-pill.unk{background:var(--grid);color:var(--ink-2)}
 .calc-tip .ct-row.today{font-weight:700}
+.news-list{list-style:none;margin:10px 0;padding:0;display:grid;gap:10px}
+.news-list li{display:grid;grid-template-columns:auto 1fr;column-gap:10px;align-items:baseline;max-width:80ch}
+.news-list li::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent);transform:translateY(-2px)}
+.news-list .src{font-size:.8rem;color:var(--ink-3);white-space:nowrap}
+.news-tend{display:inline-grid;grid-template-columns:auto 1fr;column-gap:7px;align-items:baseline;font-weight:600;font-size:.9rem;padding:5px 12px;border-radius:14px}
+.news-tend i{width:8px;height:8px;border-radius:50%;background:currentColor;align-self:start;margin-top:.45em}
+.news-tend.up{background:var(--bad-bg);color:var(--bad)}.news-tend.down{background:var(--good-bg);color:var(--good)}.news-tend.flat{background:var(--grid);color:var(--ink-2)}
 .calc-tip .si-box{margin:0}
 /* Tankstellen-Fenster: kein zusätzlicher Einzug, damit der weiße Rand so breit ist wie im Rechen-Fenster
    und Logo, Schild, Kasten und Text bündig stehen */
@@ -305,6 +312,13 @@ footer{font-size:.8rem;color:var(--ink-3)}
         <p class="small muted" style="margin-top:12px" id="st-text"></p>
       </div>
     </div>
+  </section>
+
+  <section class="panel" id="news" hidden>
+    <div class="panel-head"><h2>Was am Ölmarkt gerade passiert</h2><span class="small muted" id="news-time"></span></div>
+    <div id="news-tend"></div>
+    <ul class="news-list" id="news-list"></ul>
+    <p class="small muted" id="news-note">Zusammenfassung aktueller Nachrichten durch eine KI (Claude), zweimal täglich. Kann Fehler enthalten, bitte die verlinkten Quellen lesen. Nachrichten sind meist schon im Preis enthalten, wenn sie erscheinen: eine Einordnung, keine Prognose.</p>
   </section>
 
   <section class="panel">
