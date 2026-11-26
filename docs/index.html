@@ -181,6 +181,7 @@ summary{cursor:pointer;font-family:var(--f-display);font-size:1.2rem;font-weight
 a{color:var(--accent)}
 footer{font-size:.8rem;color:var(--ink-3)}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
+.tv-link{font-size:12.5px;color:var(--ink-2);margin:8px 0 0}.tv-link a{color:var(--accent);font-weight:600;text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--accent) 40%,transparent)}.tv-link a:hover{border-bottom-color:var(--accent)}
 </style>
 </head>
 <body>
@@ -287,8 +288,8 @@ footer{font-size:.8rem;color:var(--ink-3)}
     <p class="small muted" id="mk-sub" style="margin-bottom:8px;max-width:80ch"></p>
     <div class="chart" id="ch-mk"></div>
     <div class="legend" id="mk-legend"></div>
-    <p class="small" style="margin-top:6px"><a href="https://de.tradingview.com/symbols/TVC-UKOIL/" target="_blank" rel="noopener noreferrer">Rohöl Brent aktuell bei TradingView ↗</a> <span class="muted">(externe Seite, die Kurse hier sind bis zu einer Woche alt)</span></p>
-    <p class="small muted" id="mk-source" style="margin-top:6px"></p>
+        <p class="small muted" id="mk-source" style="margin-top:6px"></p>
+        <p class="tv-link">Aktueller Kurs: <a href="https://de.tradingview.com/symbols/TVC-UKOIL/" target="_blank" rel="noopener noreferrer">Brent bei TradingView ↗</a></p>
     <div class="grid2" style="margin-top:18px">
       <div>
         <h3>Wie viele Tage hinkt die Zapfsäule hinterher?</h3>
