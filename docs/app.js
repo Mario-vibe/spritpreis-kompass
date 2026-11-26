@@ -177,7 +177,8 @@ function lineChart(el,cfg){
     const px=(sx/Wd)*r.width,w=tip.offsetWidth;tip.style.top="4px";
     tip.style.left=(px+12+w>r.width?Math.max(0,px-w-12):px+12)+"px";
   });
-  svg.addEventListener("pointerleave",hide);
+  // Mit der Maus verschwindet die Linie beim Verlassen; auf dem Handy bleibt die zuletzt berührte Stelle stehen.
+  svg.addEventListener("pointerleave",e=>{if(e.pointerType==="mouse")hide()});
 }
 function barChart(el,vals,best){
   const Wd=Math.max(280,el.clientWidth),H=190,pad={l:36,r:8,t:16,b:26};
