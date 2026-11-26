@@ -256,6 +256,7 @@ function verdict(F,fc){
 
 /* ---------- Seite füllen ---------- */
 let fuel=fuels[0];
+let curScope=null; // Entfernungsbasis des gewählten Kraftstoffs (für das Tankstellen-Fenster)
 let tblAll=false; // Tabelle: bei Mamas Kraftstoff alle Tankstellen zeigen statt nur ihre
 let mkHidden={ws:false,brent:false};
 try{const h=JSON.parse(localStorage.getItem("spk-mk-hidden")||"{}");mkHidden={ws:!!h.ws,brent:!!h.brent}}catch(e){}
@@ -311,13 +312,14 @@ function render(){
   const personal=VEH.length>0&&VEH.every(v=>v.home);
   const shown=personal&&!tblAll?rows.filter(o=>VEH.some(v=>C.inRange(o,v))):rows;
   // Sortierung: Preis aufsteigend, bei gleichem Preis die nähere zuerst; Tankstellen ohne Preis ans Ende, ebenfalls nach Entfernung
+  curScope=F.scope;
   const SC=F.scope,kmCell=o=>{const d=SC.km[o.i];return d>=1e9?"":de(d,1)};
   $("tbl").innerHTML=shown.slice().sort((a,b)=>((a.p??1e9)-(b.p??1e9))||(SC.km[a.i]-SC.km[b.i])).map(o=>{
     const addr=`<div class="small muted">${esc([o.x.street,o.x.place].filter(Boolean).join(", "))}${o.x.unterwegs?" · unterwegs":""}</div>`;
-    if(o.p==null)return `<tr><td><div class="st">${badge(o.x)}<div>${esc(o.x.name)}${addr}</div></div></td><td class="num">${kmCell(o)}</td><td class="muted" colspan="${nCols-2}">geschlossen oder kein Preis</td></tr>`;
+    if(o.p==null)return `<tr><td><div class="st calc st-info" tabindex="0" data-st="${o.i}">${badge(o.x)}<div>${esc(o.x.name)}${addr}</div></div></td><td class="num">${kmCell(o)}</td><td class="muted" colspan="${nCols-2}">geschlossen oder kein Preis</td></tr>`;
     const yp=s.yRow?s.yRow.st[o.i]:null;const d=yp!=null?o.p-yp:null;
     const peak=Math.max(...today.map(p=>p.st[o.i]).filter(v=>v!=null),o.p);const fell=peak-o.p;
-    return `<tr class="${o.i===last.bi?"best":""}"><td><div class="st">${badge(o.x)}<div>${esc(o.x.name)}${o.i===last.bi?'<span class="tag">günstigste</span>':""}${addr}</div></div></td><td class="num">${kmCell(o)}</td><td class="p">${priceHTML(o.p)}</td><td class="num ${d==null?"":cls(d)}">${d==null?"–":sgn(d)}</td><td class="num muted">${fell>0.05?"−"+de(fell,0)+" ct":"noch keine Senkung"}</td>${VEH.map(v=>gainCell(o,v)).join("")}</tr>`}).join("");
+    return `<tr class="${o.i===last.bi?"best":""}"><td><div class="st calc st-info" tabindex="0" data-st="${o.i}">${badge(o.x)}<div>${esc(o.x.name)}${o.i===last.bi?'<span class="tag">günstigste</span>':""}${addr}</div></div></td><td class="num">${kmCell(o)}</td><td class="p">${priceHTML(o.p)}</td><td class="num ${d==null?"":cls(d)}">${d==null?"–":sgn(d)}</td><td class="num muted">${fell>0.05?"−"+de(fell,0)+" ct":"noch keine Senkung"}</td>${VEH.map(v=>gainCell(o,v)).join("")}</tr>`}).join("");
   const shownTypes=[...new Set(shown.map(o=>o.x.type).filter(t=>TYPE_ICON[t]))];
   $("tbl-legend").innerHTML=shownTypes.map(t=>`<span>${typeIcon(t)}${TYPE_ICON[t].t}</span>`).join("");$("tbl-legend").hidden=!shownTypes.length;
   const allBtn=$("tbl-all");
@@ -479,12 +481,89 @@ function calcHTML(c){
     +`<p>Weniger als ${de(MIN_GAIN,2)} € gegenüber der nächstgelegenen Tankstelle: Der Umweg lohnt kaum, deshalb ist sie nicht die sinnvollste.</p>`;
   return h;
 }
+/* ---------- Öffnungszeiten (Tankerkönig) ---------- */
+const WD=["Mo","Di","Mi","Do","Fr","Sa","So"];
+const WD_LONG=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
+// Text wie "Mo-Fr", "Samstag, Sonntag, Feiertag", "täglich ausser Sonn- und Feiertagen" -> Wochentage 0..6 (Mo..So)
+function parseDays(text){
+  const t=String(text||"").toLowerCase();
+  if(/täglich\s+au(ss|ß)er\s+sonn/.test(t))return [0,1,2,3,4,5];
+  if(/täglich|mo\s*-\s*so|montag\s*-\s*sonntag/.test(t))return [0,1,2,3,4,5,6];
+  const idx=w=>{const k=["mo","di","mi","do","fr","sa","so"];for(let i=0;i<7;i++)if(w.startsWith(k[i]))return i;return -1};
+  const days=new Set();
+  t.split(/[,;\/]|\bund\b/).map(x=>x.trim()).filter(Boolean).forEach(part=>{
+    const m=part.split(/\s*[-–]\s*/);
+    if(m.length===2){let a=idx(m[0]),b=idx(m[1]);if(a>=0&&b>=0){for(let i=a;;i=(i+1)%7){days.add(i);if(i===b)break}}}
+    else{const i=idx(part);if(i>=0)days.add(i)}
+  });
+  return [...days].sort();
+}
+const toMin=s=>{const m=/^(\d{1,2}):(\d{2})/.exec(s||"");return m?(+m[1])*60+(+m[2]):null};
+const fmtMin=m=>String(Math.floor(m/60)%25).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
+// Zeitfenster je Wochentag in Minuten; Ende 00:00 oder 23:59 gilt als Mitternacht, über Mitternacht wird geteilt
+function weekSlots(h){
+  const W=[[],[],[],[],[],[],[]];
+  if(!h)return null;
+  if(h.whole_day){W.forEach(d=>d.push([0,1440]));return W}
+  let any=false;
+  (h.times||[]).forEach(t=>{const days=parseDays(t.text),a=toMin(t.start);let b=toMin(t.end);if(a==null||b==null||!days.length)return;any=true;
+    if(b===0||b===1439)b=1440;
+    days.forEach(d=>{if(b>a)W[d].push([a,b]);else{W[d].push([a,1440]);W[(d+1)%7].push([0,b])}})});
+  if(!any)return null;
+  W.forEach(d=>d.sort((x,y)=>x[0]-y[0]));return W;
+}
+// Status zum Zeitpunkt now: open24 | open | soon | closed | unknown
+function hoursStatus(x,now){
+  const W=weekSlots(x.hours);if(!W)return {state:"unknown"};
+  if(x.hours.whole_day)return {state:"open24"};
+  const d=(now.getDay()+6)%7,m=now.getHours()*60+now.getMinutes();
+  const cur=W[d].find(([a,b])=>a<=m&&m<b);
+  if(cur){let end=cur[1],dd=d,guard=0;
+    // nahtlos in den nächsten Tag übergehend (z. B. bis 24:00 und ab 00:00) als durchgehend werten
+    while(end===1440&&guard<7){const n=W[(dd+1)%7].find(([a])=>a===0);if(!n)break;dd=(dd+1)%7;end=n[1];guard++}
+    if(guard>=7)return {state:"open24"};
+    const left=(dd-d)*1440+end-m;
+    return {state:left<=60?"soon":"open",end,left,nextDay:dd!==d};
+  }
+  for(let k=0;k<8;k++){const dd=(d+k)%7;const slot=W[dd].find(([a])=>k>0||a>m);if(slot)return {state:"closed",opens:slot[0],inDays:k,day:dd}}
+  return {state:"closed"};
+}
+function stationHTML(i){
+  const x=S.stations[i];const now=new Date();const st=hoursStatus(x,now);
+  const typ={supermarkt:"Supermarkt-Tankstelle",automat:"Tankautomat",autobahn:"Autobahn / unterwegs"}[x.type]||"";
+  const kmTxt=[];if(x.km!=null)kmTxt.push(de(x.km,1)+" km");
+  if(curScope&&curScope.personal){const d=vDist(x,curScope.home);if(d!=null)kmTxt.splice(0,1,de(d,1)+" km ab "+curScope.home.name)}
+  const sub=[[x.street,x.place].filter(Boolean).join(", "),typ,...kmTxt].filter(Boolean).join(" · ");
+  let pill;
+  if(st.state==="open24")pill=`<span class="si-pill ok"><i></i><span>Geöffnet · rund um die Uhr</span></span>`;
+  else if(st.state==="open")pill=`<span class="si-pill ok"><i></i><span>Geöffnet · bis ${fmtMin(st.end)}${st.nextDay?" (morgen)":""}</span></span>`;
+  else if(st.state==="soon")pill=`<span class="si-pill warn"><i></i><span>Geöffnet · schließt in ${st.left} Min. (${fmtMin(st.end)})</span></span>`;
+  else if(st.state==="closed"&&st.opens!=null){const when=st.inDays===0?"heute":st.inDays===1?"morgen":"am "+WD_LONG[st.day];pill=`<span class="si-pill no"><i></i><span>Geschlossen · öffnet ${when} um ${fmtMin(st.opens)}</span></span>`}
+  else if(st.state==="closed")pill=`<span class="si-pill no"><i></i><span>Geschlossen</span></span>`;
+  else pill=`<span class="si-pill unk"><i></i><span>Öffnungszeiten nicht bekannt</span></span>`;
+  let rows="";
+  const today=(now.getDay()+6)%7;
+  if(x.hours&&x.hours.whole_day)rows=`<div class="ct-row today"><span>täglich</span><span>00:00–24:00</span></div>`;
+  else if(x.hours&&(x.hours.times||[]).length){
+    const list=x.hours.times.map(t=>({t,days:parseDays(t.text)})).sort((a,b)=>(a.days[0]??9)-(b.days[0]??9)||toMin(a.t.start)-toMin(b.t.start));
+    rows=list.map(({t,days})=>{const e=toMin(t.end);const end=e===0?"24:00":String(t.end).slice(0,5);
+      return `<div class="ct-row${days.includes(today)?" today":""}"><span>${esc(t.text)}</span><span>${esc(String(t.start).slice(0,5))}–${esc(end)}</span></div>`}).join("");
+  }
+  const special=x.hours&&(x.hours.override||[]).length?`<p>Abweichende Öffnungszeiten gemeldet: ${esc(x.hours.override.map(o=>o.text||"").filter(Boolean).join(", ")||"siehe Tankerkönig")}.</p>`:"";
+  return `<div class="si-head">${badge(x)}<div><div class="ct-title">${esc(x.name)} ${esc(x.place||"")}</div><div class="si-sub">${esc(sub)}</div></div></div>`
+    +pill
+    +(rows?`<div class="ct-box"><div class="ct-head">Öffnungszeiten</div>${rows}</div>`:"")
+    +special
+    +`<p>${x.type==="automat"?"Tankautomat: Bezahlung mit Karte. ":""}Angaben des Betreibers über Tankerkönig, ohne Gewähr. Feiertage sind im Status nicht berücksichtigt.</p>`;
+}
 function showCalc(td){
-  let c;try{c=JSON.parse(td.dataset.calc)}catch(e){return}
+  let html;const isSt=td.dataset.st!=null;
+  if(isSt)html=stationHTML(+td.dataset.st);
+  else{let c;try{c=JSON.parse(td.dataset.calc)}catch(e){return}html=calcHTML(c)}
   if(td!==calcFor)calcAt=Date.now();
-  calcTip.innerHTML=calcHTML(c);calcTip.hidden=false;calcFor=td;
+  calcTip.innerHTML=html;calcTip.hidden=false;calcFor=td;
   const r=td.getBoundingClientRect(),w=calcTip.offsetWidth,h=calcTip.offsetHeight,vw=document.documentElement.clientWidth;
-  let left=Math.min(Math.max(8,r.right-w),vw-w-8);let top=r.bottom+6;
+  let left=isSt?Math.min(Math.max(8,r.left),vw-w-8):Math.min(Math.max(8,r.right-w),vw-w-8);let top=r.bottom+6;
   if(top+h>window.innerHeight-8&&r.top-h-6>8)top=r.top-h-6;
   calcTip.style.left=(left+window.scrollX)+"px";calcTip.style.top=(top+window.scrollY)+"px";
 }
@@ -494,13 +573,13 @@ const tblBody=$("tbl");
 let lastPointer="mouse";
 document.addEventListener("pointerdown",e=>{lastPointer=e.pointerType||"mouse"},true);
 document.addEventListener("pointermove",e=>{if(e.pointerType==="mouse")lastPointer="mouse"},true);
-tblBody.addEventListener("mouseover",e=>{if(lastPointer!=="mouse")return;const td=e.target.closest("td.calc");if(td&&td!==calcFor)showCalc(td)});
+tblBody.addEventListener("mouseover",e=>{if(lastPointer!=="mouse")return;const td=e.target.closest(".calc");if(!td){if(calcFor)hideCalc();return}if(td!==calcFor)showCalc(td)});
 tblBody.addEventListener("mouseleave",()=>{if(lastPointer==="mouse")hideCalc()});
-tblBody.addEventListener("focusin",e=>{const td=e.target.closest("td.calc");if(td)showCalc(td)});
+tblBody.addEventListener("focusin",e=>{const td=e.target.closest(".calc");if(td)showCalc(td)});
 tblBody.addEventListener("focusout",hideCalc);
 // Beim Antippen am Handy öffnen Maus- und Fokus-Ereignisse das Fenster schon kurz vor dem Klick.
 // Ein Klick schließt es deshalb nur, wenn es nicht gerade eben (vor weniger als 0,6 s) geöffnet wurde.
-tblBody.addEventListener("click",e=>{const td=e.target.closest("td.calc");if(!td)return;
+tblBody.addEventListener("click",e=>{const td=e.target.closest(".calc");if(!td)return;
   if(td===calcFor&&Date.now()-calcAt>600)hideCalc();else showCalc(td);e.stopPropagation()});
 document.addEventListener("click",hideCalc);
 document.addEventListener("keydown",e=>{if(e.key==="Escape")hideCalc()});
