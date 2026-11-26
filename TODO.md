@@ -1,8 +1,8 @@
 # Offene Punkte
 
-- [ ] **Tankmengen klären:** Wie viele Liter tankt ihr typischerweise auf einmal? Angenommen sind
-      Opel 40 l und Bulli 60 l. Eintragen in `config.json` unter `vehicles` → `fill_l`.
+- [ ] **Tankmenge Bulli klären:** Angenommen sind 60 l. Eintragen in `config.json` unter `vehicles` → `fill_l`.
       Davon hängt ab, ab welchem Preisunterschied sich ein Umweg lohnt.
+- [x] **Tankmenge Opel:** bleibt bei 40 l (Tankliste: meist weniger, Durchschnitt 27 l, höchstens etwa 45 l).
 - [ ] **Tankrabatt prüfen (Mitte Dezember 2026):** Wird die Senkung der Energiesteuer über den
       31.12.2026 hinaus verlängert? Falls ja, `rabatt_end` in `config.json` anpassen.
 - [ ] **Verzögerungsanalyse ansehen (ab etwa Anfang Januar 2027):** Wie viele Tage hinkt die
