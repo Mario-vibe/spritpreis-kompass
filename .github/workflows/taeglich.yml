@@ -27,6 +27,11 @@ jobs:
       - name: Rohöl, Großhandel und Wechselkurs laden
         run: python3 scripts/fetch_market.py
 
+      - name: Öffnungszeiten der Tankstellen holen
+        env:
+          TK_API_KEY: ${{ secrets.TK_API_KEY }}
+        run: python3 scripts/fetch_details.py
+
       - name: Historische Preise übernehmen (falls Zugang eingerichtet)
         env:
           TK_HISTORY_URL: ${{ secrets.TK_HISTORY_URL }}

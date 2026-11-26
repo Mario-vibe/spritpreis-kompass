@@ -37,6 +37,12 @@ def main():
             before = [e for e in items if e[0] < cutoff][-1:]  # Startwert am Rand
             per[fuel] = [[t, p] for t, p in before + [e for e in items if e[0] >= cutoff]]
         events[s["id"]] = per
+    # Öffnungszeiten (einmal täglich von fetch_details.py geholt) an die Tankstellen hängen
+    try:
+        details = json.loads((DATA / "details.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        details = {}
+    stations = [dict(st, hours=details[st["id"]]) if st["id"] in details else st for st in cfg["stations"]]
     mk = read_csv(DATA / "market.csv")
     market = [{"date": d, **{k: mk[d].get(k) for k in FIELDS}} for d in sorted(mk)][-(days + 30):]
     meta_path = DATA / "market_meta.json"
@@ -47,7 +53,7 @@ def main():
         "demo": False,
         "days": days,
         "fuels": cfg["fuels"],
-        "stations": cfg["stations"],
+        "stations": stations,
         "tax": cfg["tax"],
         "events": events,
         "market": market,
