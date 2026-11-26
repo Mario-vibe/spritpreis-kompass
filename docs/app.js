@@ -164,7 +164,7 @@ function lineChart(el,cfg){
   function nearest(pts,xv){if(!pts.length)return null;let lo=0,hi=pts.length-1;if(xv<pts[0][0]-cfg.tol||xv>pts[hi][0]+cfg.tol)return null;while(hi-lo>1){const m=(lo+hi)>>1;if(pts[m][0]<=xv)lo=m;else hi=m}
     if(cfg.stepTip)return pts[lo][0]<=xv?pts[lo]:pts[hi];return Math.abs(pts[lo][0]-xv)<=Math.abs(pts[hi][0]-xv)?pts[lo]:pts[hi]}
   const hide=()=>{tip.hidden=true;xh.setAttribute("visibility","hidden");dots.innerHTML=""};
-  svg.addEventListener("pointermove",e=>{
+  const show=e=>{
     const r=svg.getBoundingClientRect();const sx=(e.clientX-r.left)*Wd/r.width;const xv=x0+(sx-pad.l)/(Wd-pad.l-pad.r)*(x1-x0);
     if(sx<pad.l||sx>Wd-pad.r){hide();return}
     let rows="",dd="";
@@ -176,10 +176,16 @@ function lineChart(el,cfg){
     tip.innerHTML=`<div class="t">${cfg.xFmt(xv)}</div>${rows}`;tip.hidden=false;
     const px=(sx/Wd)*r.width,w=tip.offsetWidth;tip.style.top="4px";
     tip.style.left=(px+12+w>r.width?Math.max(0,px-w-12):px+12)+"px";
-  });
+  };
+  svg.addEventListener("pointermove",show);
+  svg.addEventListener("pointerdown",show);
   // Mit der Maus verschwindet die Linie beim Verlassen; auf dem Handy bleibt die zuletzt berührte Stelle stehen.
   svg.addEventListener("pointerleave",e=>{if(e.pointerType==="mouse")hide()});
 }
+// Tippen außerhalb eines Diagramms blendet dort stehengebliebene Linien und Infokästen aus.
+document.addEventListener("pointerdown",e=>{
+  document.querySelectorAll("svg .xh").forEach(xh=>{const svg=xh.ownerSVGElement;if(svg.contains(e.target))return;
+    xh.setAttribute("visibility","hidden");svg.querySelector(".dots").innerHTML="";const tip=svg.parentNode.querySelector(".tip");if(tip)tip.hidden=true})});
 function barChart(el,vals,best){
   const Wd=Math.max(280,el.clientWidth),H=190,pad={l:36,r:8,t:16,b:26};
   const n=vals.length,bw=(Wd-pad.l-pad.r)/n;const y0=Math.min(0,...vals.map(v=>v.r)),y1=1;
