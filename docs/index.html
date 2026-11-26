@@ -115,7 +115,16 @@ tr.best td{background:var(--accent-soft)}
 /* Erste Spalte (Tankstelle) bleibt beim seitlichen Wischen stehen */
 .tbl th:first-child,.tbl td:first-child{position:sticky;left:0;z-index:1;background:var(--surface);box-shadow:1px 0 0 var(--line)}
 .tbl tr.best td:first-child{background:var(--accent-soft)}
-@media (max-width:600px){.tbl td:first-child{white-space:normal;min-width:8.5rem;max-width:10.5rem}}
+@media (max-width:600px){.tbl td:first-child{white-space:normal;min-width:10.5rem;max-width:12.5rem}}
+.st{display:flex;gap:10px;align-items:center}
+.sb{position:relative;flex:none;width:28px;height:28px;border-radius:7px;display:inline-grid;place-items:center;font:700 11px/1 var(--f-body);letter-spacing:.02em}
+.sb-k{position:absolute;right:-5px;bottom:-5px;width:15px;height:15px;border-radius:50%;background:var(--surface);box-shadow:0 0 0 1px var(--line);display:grid;place-items:center}
+.sb-k svg{width:10px;height:10px;fill:none;stroke:var(--ink-2);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.sb-legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.8rem;color:var(--ink-2);margin-top:10px}
+.sb-legend>span{display:inline-flex;align-items:center;gap:6px}
+.sb-legend .sb-k{position:static}
+.pylon .where{display:flex;gap:10px;align-items:center}
+.pylon .sb-k{background:#e8eeee;box-shadow:none}
 .trip{display:grid;gap:6px;background:var(--accent-soft);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:.92rem}
 .trip b{font-weight:600}
 td.gain{font-variant-numeric:tabular-nums;font-weight:600}
@@ -234,6 +243,7 @@ footer{font-size:.8rem;color:var(--ink-3)}
         <tbody id="tbl"></tbody>
       </table></div>
       <button type="button" class="btn" id="tbl-all" style="margin-top:10px" hidden></button>
+      <div class="sb-legend" id="tbl-legend" hidden></div>
       <p class="small muted" id="tbl-note" style="margin-top:10px" hidden></p>
   </section>
 

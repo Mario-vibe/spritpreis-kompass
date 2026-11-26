@@ -43,6 +43,7 @@ def main():
                 "street": f"{s['street']} {s.get('houseNumber') or ''}".strip(),
                 "place": s["place"],
                 "km": round(s["dist"], 1),
+                "type": "marke",  # bei Bedarf: supermarkt, automat, autobahn
                 "lat": s["lat"],
                 "lng": s["lng"],
             })

@@ -54,6 +54,7 @@ def main():
                 "street": f"{s['street']} {s.get('houseNumber') or ''}".strip().title() if s["street"].isupper() else f"{s['street']} {s.get('houseNumber') or ''}".strip(),
                 "place": s["place"].title() if s["place"].isupper() else s["place"],
                 "km": None,
+                "type": "marke",  # bei Bedarf: supermarkt, automat, autobahn
                 "lat": s["lat"],
                 "lng": s["lng"],
             })

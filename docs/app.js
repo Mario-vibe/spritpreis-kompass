@@ -213,6 +213,17 @@ function makeCalc(rows,VEH){
     return b.o.i!==r.i&&b.t.net<MIN_GAIN?{v,o:r,net:0,ref:r}:{v,o:b.o,net:b.t.net,ref:r}};
   return {RF,dist,inRange,REF,total,trip,pick};
 }
+/* ---------- Kästchen je Tankstelle: Kürzel in Markenfarbe, bei Bedarf mit Zusatzsymbol ---------- */
+const TYPE_ICON={
+  supermarkt:{t:"Supermarkt-Tankstelle",svg:'<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.6 11.4a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.6L21 7H6"/>'},
+  automat:{t:"Tankautomat",svg:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>'},
+  autobahn:{t:"Autobahn / unterwegs",svg:'<path d="M5 21 9 3"/><path d="M19 21 15 3"/><path d="M12 5v3"/><path d="M12 12v3"/><path d="M12 18v2"/>'}
+};
+const typeIcon=t=>TYPE_ICON[t]?`<span class="sb-k" title="${TYPE_ICON[t].t}"><svg viewBox="0 0 24 24" aria-hidden="true">${TYPE_ICON[t].svg}</svg></span>`:"";
+function badge(x){
+  const b=(S.brands||{})[String(x.name||"").toLowerCase()]||{k:String(x.name||"?").replace(/[^A-Za-zÄÖÜäöü]/g,"").slice(0,2).toUpperCase(),bg:"#8a979a",fg:"#ffffff"};
+  return `<span class="sb" style="background:${esc(b.bg)};color:${esc(b.fg)}" aria-hidden="true">${esc(b.k)}${typeIcon(x.type)}</span>`;
+}
 function corr(a,b){const n=a.length;if(n<5)return NaN;const ma=a.reduce((x,y)=>x+y)/n,mb=b.reduce((x,y)=>x+y)/n;let s=0,sa=0,sb=0;for(let i=0;i<n;i++){s+=(a[i]-ma)*(b[i]-mb);sa+=(a[i]-ma)**2;sb+=(b[i]-mb)**2}return s/Math.sqrt(sa*sb)}
 
 /* ---------- Auswertung ---------- */
@@ -267,7 +278,7 @@ function render(){
   $("p-price").innerHTML=priceHTML(last.best)+'<span style="font-size:.4em"> €</span>';
   // km im Preisfeld: bei Mamas Kraftstoff ab ihrem Wohnort, sonst ab deinem
   const pkm=(x,sc)=>{if(sc.personal){const d=vDist(x,sc.home);return d!=null?de(d,1)+" km ab "+sc.home.name:""}return x.km!=null?de(x.km,1)+" km":""};
-  $("p-where").textContent=[stn[last.bi].name,[stn[last.bi].street,stn[last.bi].place].filter(Boolean).join(", "),pkm(stn[last.bi],F.scope)].filter(Boolean).join(" · ");
+  $("p-where").innerHTML=badge(stn[last.bi])+"<span>"+esc([stn[last.bi].name,[stn[last.bi].street,stn[last.bi].place].filter(Boolean).join(", "),pkm(stn[last.bi],F.scope)].filter(Boolean).join(" · "))+"</span>";
   const mtn=Math.max(0,Math.round((cycStart(1)-now.getTime())/MIN));
   $("p-clock").textContent=`Stand ${hm(now)} Uhr · nächste Erhöhung in ${Math.floor(mtn/60)} h ${mtn%60} min`;
 
@@ -303,10 +314,12 @@ function render(){
   const SC=F.scope,kmCell=o=>{const d=SC.km[o.i];return d>=1e9?"":de(d,1)};
   $("tbl").innerHTML=shown.slice().sort((a,b)=>((a.p??1e9)-(b.p??1e9))||(SC.km[a.i]-SC.km[b.i])).map(o=>{
     const addr=`<div class="small muted">${esc([o.x.street,o.x.place].filter(Boolean).join(", "))}${o.x.unterwegs?" · unterwegs":""}</div>`;
-    if(o.p==null)return `<tr><td>${esc(o.x.name)}${addr}</td><td class="num">${kmCell(o)}</td><td class="muted" colspan="${nCols-2}">geschlossen oder kein Preis</td></tr>`;
+    if(o.p==null)return `<tr><td><div class="st">${badge(o.x)}<div>${esc(o.x.name)}${addr}</div></div></td><td class="num">${kmCell(o)}</td><td class="muted" colspan="${nCols-2}">geschlossen oder kein Preis</td></tr>`;
     const yp=s.yRow?s.yRow.st[o.i]:null;const d=yp!=null?o.p-yp:null;
     const peak=Math.max(...today.map(p=>p.st[o.i]).filter(v=>v!=null),o.p);const fell=peak-o.p;
-    return `<tr class="${o.i===last.bi?"best":""}"><td>${esc(o.x.name)}${o.i===last.bi?'<span class="tag">günstigste</span>':""}${addr}</td><td class="num">${kmCell(o)}</td><td class="p">${priceHTML(o.p)}</td><td class="num ${d==null?"":cls(d)}">${d==null?"–":sgn(d)}</td><td class="num muted">${fell>0.05?"−"+de(fell,0)+" ct":"noch keine Senkung"}</td>${VEH.map(v=>gainCell(o,v)).join("")}</tr>`}).join("");
+    return `<tr class="${o.i===last.bi?"best":""}"><td><div class="st">${badge(o.x)}<div>${esc(o.x.name)}${o.i===last.bi?'<span class="tag">günstigste</span>':""}${addr}</div></div></td><td class="num">${kmCell(o)}</td><td class="p">${priceHTML(o.p)}</td><td class="num ${d==null?"":cls(d)}">${d==null?"–":sgn(d)}</td><td class="num muted">${fell>0.05?"−"+de(fell,0)+" ct":"noch keine Senkung"}</td>${VEH.map(v=>gainCell(o,v)).join("")}</tr>`}).join("");
+  const shownTypes=[...new Set(shown.map(o=>o.x.type).filter(t=>TYPE_ICON[t]))];
+  $("tbl-legend").innerHTML=shownTypes.map(t=>`<span>${typeIcon(t)}${TYPE_ICON[t].t}</span>`).join("");$("tbl-legend").hidden=!shownTypes.length;
   const allBtn=$("tbl-all");
   if(personal){allBtn.hidden=false;allBtn.textContent=tblAll?`Nur ${VEH.map(v=>v.name).join(" und ")}s Tankstellen zeigen`:`Alle ${rows.length} Tankstellen zeigen`;allBtn.setAttribute("aria-pressed",tblAll)}
   else allBtn.hidden=true;
@@ -352,7 +365,7 @@ function render(){
           return d>=0?`${pre(p)}<b>${eur2(d)}</b> je Tankfüllung gegenüber der Fahrt zur günstigsten`:`${pre(p)}Die Fahrt zur günstigsten brächte nur ${eur2(-d)} je Tankfüllung, das lohnt kaum`}).filter(Boolean).join(". ");
         const kmLabel=g.ps.every(p=>p.v.home)?(d=>d!=null?de(d,1)+" km ab "+g.ps[0].v.name:"")(vDist(x,g.ps[0].v)):g.ps.every(p=>!p.v.home)&&x.km!=null?de(x.km,1)+" km":"";
         return `<div class="price second">${priceHTML(g.o.p)}<span style="font-size:.4em"> €</span></div>
-          <div class="where">${esc([x.name,[x.street,x.place].filter(Boolean).join(", "),kmLabel].filter(Boolean).join(" · "))}</div>
+          <div class="where">${badge(x)}<span>${esc([x.name,[x.street,x.place].filter(Boolean).join(", "),kmLabel].filter(Boolean).join(" · "))}</span></div>
           <div class="p-note">für ${names(g.ps)}${same?", zugleich die günstigste":vs?`. ${vs}.`:""}</div>`}).join(`<hr class="p-sep">`);
     }
     smart.hidden=false;
