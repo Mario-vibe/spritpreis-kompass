@@ -552,7 +552,7 @@ function stationHTML(i){
   const special=x.hours&&(x.hours.override||[]).length?`<p>Abweichende Öffnungszeiten gemeldet: ${esc(x.hours.override.map(o=>o.text||"").filter(Boolean).join(", ")||"siehe Tankerkönig")}.</p>`:"";
   return `<div class="si-head">${badge(x)}<div><div class="ct-title">${esc(x.name)} ${esc(x.place||"")}</div><div class="si-sub">${esc(sub)}</div></div></div>`
     +pill
-    +(rows?`<div class="ct-box"><div class="ct-head">Öffnungszeiten</div>${rows}</div>`:"")
+    +(rows?`<div class="ct-box si-box"><div class="ct-head">Öffnungszeiten</div>${rows}</div>`:"")
     +special
     +`<p>${x.type==="automat"?"Tankautomat: Bezahlung mit Karte. ":""}Angaben des Betreibers über Tankerkönig, ohne Gewähr. Feiertage sind im Status nicht berücksichtigt.</p>`;
 }
