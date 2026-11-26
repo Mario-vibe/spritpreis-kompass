@@ -18,3 +18,12 @@
       10 Minuten läuft an diesem Tag ab. Etwa Mitte Februar bei GitHub einen neuen erstellen (gleiche
       Einstellungen: nur dieses Repository, nur „Actions: Read and write“) und auf dem Pi in
       `~/.config/spritpreis/github-token` ersetzen. Danach den alten Schlüssel bei GitHub löschen.
+- [ ] **Routenplanung mit Grenz-Tipp (Idee, erst bei einer längeren Fahrt angehen):** Start und Ziel
+      eingeben, günstige Tankstellen am deutschen Abschnitt der Strecke mit Umwegkosten anzeigen,
+      hervorgehoben die letzten vor der Grenze (Rückreise: die ersten danach). Optional einen selbst
+      recherchierten Auslandspreis eintragen und vergleichen, ob Volltanken vor der Grenze lohnt.
+      Technik: kostenloser Cloudflare Worker als Vermittler, der den Tankerkönig-Schlüssel und den
+      Schlüssel eines Routendienstes (z. B. openrouteservice) geheim hält und nichts speichert.
+      Tankerkönig kennt nur Deutschland, ausländische Preise werden nicht eingebunden.
+      Aufwand: Worker klein, Routenplanung etwa zwei Sitzungen. Vorher klären: zulässige Zahl der
+      Tankerkönig-Abfragen pro Route. Zuerst einen Entwurf zeigen.
