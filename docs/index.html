@@ -156,7 +156,11 @@ td.calc:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .calc-tip .si-pill.no{background:var(--bad-bg);color:var(--bad)}
 .calc-tip .si-pill.unk{background:var(--grid);color:var(--ink-2)}
 .calc-tip .ct-row.today{font-weight:700}
-.calc-tip .si-box{margin:0 11px} /* links bündig mit dem Logo, rechts mit dem Textrand */
+.calc-tip .si-box{margin:0}
+/* Tankstellen-Fenster: kein zusätzlicher Einzug, damit der weiße Rand so breit ist wie im Rechen-Fenster
+   und Logo, Schild, Kasten und Text bündig stehen */
+.calc-tip.si .si-head,.calc-tip.si p{padding:0}
+.calc-tip.si .si-pill{margin:0}
 .st-info{cursor:help;border-radius:6px}
 .st-info:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .tag{font-size:.72rem;font-weight:600;color:var(--accent);margin-left:6px}

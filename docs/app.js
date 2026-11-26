@@ -561,7 +561,7 @@ function showCalc(td){
   if(isSt)html=stationHTML(+td.dataset.st);
   else{let c;try{c=JSON.parse(td.dataset.calc)}catch(e){return}html=calcHTML(c)}
   if(td!==calcFor)calcAt=Date.now();
-  calcTip.innerHTML=html;calcTip.hidden=false;calcFor=td;
+  calcTip.innerHTML=html;calcTip.classList.toggle("si",isSt);calcTip.hidden=false;calcFor=td;
   const r=td.getBoundingClientRect(),w=calcTip.offsetWidth,h=calcTip.offsetHeight,vw=document.documentElement.clientWidth;
   let left=isSt?Math.min(Math.max(8,r.left),vw-w-8):Math.min(Math.max(8,r.right-w),vw-w-8);let top=r.bottom+6;
   if(top+h>window.innerHeight-8&&r.top-h-6>8)top=r.top-h-6;
