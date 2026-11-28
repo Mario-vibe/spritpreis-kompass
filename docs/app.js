@@ -264,6 +264,18 @@ function verdict(F,fc){
 /* ---------- Seite füllen ---------- */
 let fuel=fuels[0];
 let curScope=null; // Entfernungsbasis des gewählten Kraftstoffs (für das Tankstellen-Fenster)
+// Tankmenge je Fahrzeug: Anteil der Tankgröße, wie viel getankt wird (nicht: wie viel noch drin ist).
+// "voll" = 90 % des Tanks, weil selten ganz leer getankt wird. Gemerkt pro Gerät.
+const FRACS=[["¼",0.25,"ein Viertel"],["½",0.5,"einen halben"],["¾",0.75,"drei Viertel"],["voll",0.9,"einen vollen"]];
+let fillFrac={};try{fillFrac=JSON.parse(localStorage.getItem("spk-fill")||"{}")||{}}catch(e){}
+function applyFill(){(S.vehicles||[]).forEach(v=>{if(!v.tank_l){v.fill_l=v.fill_l||30;return}
+  const f=FRACS.some(a=>a[1]===fillFrac[v.name])?fillFrac[v.name]:0.5;v.frac=f;v.fill_l=Math.round(v.tank_l*f*10)/10})}
+const litTxt=l=>de(l,l%1?1:0)+" l";
+function fillRow(v){
+  if(!v.tank_l)return `<b>${esc(v.name)}:</b> `;
+  return `<div class="fill-row"><b>${esc(v.name)}</b><span class="verb">tankt</span><span class="seg seg-s" role="group" aria-label="Tankmenge ${esc(v.name)}">`+
+    FRACS.map(([t,f,lang])=>`<button type="button" data-v="${esc(v.name)}" data-f="${f}" aria-pressed="${v.frac===f}" aria-label="${esc(v.name)} tankt ${lang} Tank">${t}</button>`).join("")+
+    `</span><span class="lit">= ${litTxt(v.fill_l)}</span></div>`}
 let tblAll=false; // Tabelle: bei Mamas Kraftstoff alle Tankstellen zeigen statt nur ihre
 let mkHidden={ws:false,brent:false};
 try{const h=JSON.parse(localStorage.getItem("spk-mk-hidden")||"{}");mkHidden={ws:!!h.ws,brent:!!h.brent}}catch(e){}
@@ -273,6 +285,7 @@ const places=[...new Set(S.stations.map(s=>s.place).filter(Boolean))];
 if(places.length)$("eyebrow").textContent="Tankstellen in "+places.slice(0,3).join(", ");
 
 function render(){
+  applyFill();
   const F=DATA[fuel],fc=FC[fuel],name=FUELNAME[fuel];
   document.querySelectorAll("#seg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.fuel===fuel));
   if(!F.series.length){$("v-head").textContent=`Noch keine Preise für ${name}`;return}
@@ -313,7 +326,7 @@ function render(){
     const c={v:v.name,fill:v.fill_l,l100:v.l_per_100km,rf:RF,me,best,isBest:o.i===pk.o.i,d};
     const txt=o.i===pk.o.i?"beste Wahl":Math.abs(d)<MIN_GAIN?"fast gleich":eur2(d);
     return `<td class="gain calc ${o.i===pk.o.i?"pos":d<=-MIN_GAIN?"neg":"flat"}" tabindex="0" data-calc="${esc(JSON.stringify(c))}">${txt}</td>`};
-  $("tbl-head").innerHTML="<th>Tankstelle</th><th>"+(F.scope.personal?"km ab "+esc(F.scope.home.name):"km")+"</th><th>jetzt</th><th>ggü. gestern</th><th>seit 12 Uhr</th>"+VEH.map(v=>`<th title="Kosten je Tankfüllung (${v.fill_l} l) samt Hin- und Rückfahrt, verglichen mit der sinnvollsten Tankstelle">${esc(v.name)}</th>`).join("");
+  $("tbl-head").innerHTML="<th>Tankstelle</th><th>"+(F.scope.personal?"km ab "+esc(F.scope.home.name):"km")+"</th><th>jetzt</th><th>ggü. gestern</th><th>seit 12 Uhr</th>"+VEH.map(v=>`<th title="Kosten je Tankfüllung (${litTxt(v.fill_l)}) samt Hin- und Rückfahrt, verglichen mit der sinnvollsten Tankstelle">${esc(v.name)}</th>`).join("");
   const nCols=5+VEH.length;
   // Gehört der Kraftstoff nur zu Fahrzeugen mit eigenem Wohnort (Mama), zeigt die Tabelle nur deren Tankstellen
   const personal=VEH.length>0&&VEH.every(v=>v.home);
@@ -339,20 +352,20 @@ function render(){
     // verglichen mit der Fahrt zur günstigsten Tankstelle
     const cheapRow=rows.find(o=>o.i===last.bi);
     const lines=VEH.map(v=>{const r=C.REF.get(v);
-      if(!r)return `<div><b>${esc(v.name)}:</b> ${v.home&&!rows.some(o=>C.dist(o,v)!=null)?"Entfernungen noch nicht berechnet.":"Keine geöffnete Tankstelle im Umkreis."}</div>`;
+      if(!r)return `<div>${fillRow(v)}${v.home&&!rows.some(o=>C.dist(o,v)!=null)?"Entfernungen noch nicht berechnet.":"Keine geöffnete Tankstelle im Umkreis."}</div>`;
       const pk=C.pick(v),x=pk.o.x;
       const best=`<b>${esc(x.name)} ${esc(x.place||"")}</b> (${kmTxt(pk.o,v)}, ${priceTxt(pk.o.p)})`;
-      if(pk.o.i===last.bi)return `<div><b>${esc(v.name)}:</b> Am sinnvollsten ist ${best}, zugleich die günstigste.</div>`;
+      if(pk.o.i===last.bi)return `<div>${fillRow(v)}Am sinnvollsten ist ${best}, zugleich die günstigste.</div>`;
       const cheapTxt=`${esc(cheapRow.x.name)} ${esc(cheapRow.x.place||"")}`;
       const tc=C.trip(cheapRow,v);
-      if(!tc)return `<div><b>${esc(v.name)}:</b> Am sinnvollsten ist ${best}. Die günstigste (${cheapTxt}) liegt ${cheapRow.x.unterwegs?"nur unterwegs":"außerhalb der Auswahl"}.</div>`;
+      if(!tc)return `<div>${fillRow(v)}Am sinnvollsten ist ${best}. Die günstigste (${cheapTxt}) liegt ${cheapRow.x.unterwegs?"nur unterwegs":"außerhalb der Auswahl"}.</div>`;
       const d=pk.net-tc.net;
-      return `<div><b>${esc(v.name)}:</b> Am sinnvollsten ist ${best}. `+(d>=0
-        ?`Gegenüber der Fahrt zur günstigsten (${cheapTxt}) <b>${eur2(d)}</b> je Tankfüllung (${v.fill_l} l).</div>`
-        :`Die Fahrt zur günstigsten (${cheapTxt}) brächte nur ${eur2(-d)} je Tankfüllung (${v.fill_l} l), das lohnt kaum.</div>`)});
+      return `<div>${fillRow(v)}Am sinnvollsten ist ${best}. `+(d>=0
+        ?`Gegenüber der Fahrt zur günstigsten (${cheapTxt}) <b>${eur2(d)}</b> je Tankfüllung.</div>`
+        :`Die Fahrt zur günstigsten (${cheapTxt}) brächte nur ${eur2(-d)} je Tankfüllung, das lohnt kaum.</div>`)});
     hint.innerHTML=lines.join("");hint.hidden=false;
     const homeV=VEH.filter(v=>v.home);
-    note.textContent=`Spalte${VEH.length>1?"n":""} ${VEH.map(v=>v.name).join(" und ")}: Kosten je Tankfüllung (${VEH.map(v=>v.name+" "+v.fill_l+" l").join(", ")}) samt Hin- und Rückfahrt ab Wohnort (Luftlinie × ${de(RF,1)}), verglichen mit der sinnvollsten Tankstelle. Ein Vorteil unter ${de(MIN_GAIN,2)} € gegenüber der nächstgelegenen zählt nicht. Zeit und Verschleiß sind nicht eingerechnet. Für Tankstellen „unterwegs“ entfällt die Rechnung.`
+    note.textContent=`Spalte${VEH.length>1?"n":""} ${VEH.map(v=>v.name).join(" und ")}: Kosten je Tankfüllung (${VEH.map(v=>v.name+" "+litTxt(v.fill_l)).join(", ")}) samt Hin- und Rückfahrt ab Wohnort (Luftlinie × ${de(RF,1)}), verglichen mit der sinnvollsten Tankstelle. Ein Vorteil unter ${de(MIN_GAIN,2)} € gegenüber der nächstgelegenen zählt nicht. Zeit und Verschleiß sind nicht eingerechnet. Für Tankstellen „unterwegs“ entfällt die Rechnung.`
       +homeV.map(v=>` ${v.name}: Entfernungen ab ihrem Wohnort${v.include?`, nur ihre ${v.include.length} Tankstellen`:v.max_km?`, nur Tankstellen bis ${v.max_km} km`:""}${(v.exclude||[]).length?`, ohne ${(v.exclude||[]).map(id=>{const x=S.stations.find(t=>t.id===id);return x?x.name+" "+(x.place||""):""}).filter(Boolean).join(", ")}`:""}.`).join("");
     note.hidden=false;
   }else{hint.hidden=true;note.hidden=true}
@@ -461,7 +474,7 @@ function render(){
     let tip="",tipHTML="";
     if(MV){const pk=makeCalc(stn.map((x,i)=>({x,i,p:el.st[i]})),[MV]).pick(MV);
       if(pk){const w=[pk.o.x.name,pk.o.x.street,pk.o.x.place].filter(Boolean).join(", ");
-        const why=pk.o.i!==pk.ref.i?` Das lohnt sich trotz Umweg, etwa ${de(pk.net,2)} € gespart bei ${MV.fill_l} Litern.`:" Ein Umweg zu einer günstigeren Tankstelle lohnt sich bei "+MV.fill_l+" Litern gerade nicht.";
+        const why=pk.o.i!==pk.ref.i?` Das lohnt sich trotz Umweg, etwa ${de(pk.net,2)} € gespart bei ${de(MV.fill_l,MV.fill_l%1?1:0)} Litern.`:" Ein Umweg zu einer günstigeren Tankstelle lohnt sich bei "+de(MV.fill_l,MV.fill_l%1?1:0)+" Litern gerade nicht.";
         tip=` Für dich am sinnvollsten: ${w} für ${priceTxt(pk.o.p)}.${why}`;
         tipHTML=`<br><b>Für Mama am sinnvollsten:</b> ${esc(w)}, ${priceTxt(pk.o.p)}.${esc(why)}`}}
     $("mama-text").innerHTML+=tipHTML;
@@ -592,6 +605,9 @@ document.addEventListener("click",hideCalc);
 document.addEventListener("keydown",e=>{if(e.key==="Escape")hideCalc()});
 window.addEventListener("scroll",()=>{if(calcFor)showCalc(calcFor)},{passive:true});
 $("tbl-all").addEventListener("click",()=>{tblAll=!tblAll;render()});
+$("tbl-hint").addEventListener("click",e=>{const b=e.target.closest("button[data-f]");if(!b)return;
+  fillFrac[b.dataset.v]=+b.dataset.f;try{localStorage.setItem("spk-fill",JSON.stringify(fillFrac))}catch(e){}
+  render();const n=[...$("tbl-hint").querySelectorAll("button[data-f]")].find(x=>x.dataset.v===b.dataset.v&&x.dataset.f===b.dataset.f);if(n)n.focus()});
 document.querySelectorAll("#seg button").forEach(b=>b.addEventListener("click",()=>{fuel=b.dataset.fuel;try{localStorage.setItem("spk-fuel",fuel)}catch(e){}render()}));
 $("mama-copy").addEventListener("click",e=>{const b=e.currentTarget;
   const done=t=>{b.textContent=t;setTimeout(()=>b.textContent="Nachricht kopieren",2500)};

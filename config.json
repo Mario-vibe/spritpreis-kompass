@@ -249,19 +249,19 @@
       "name": "Opel",
       "fuel": "diesel",
       "l_per_100km": 6,
-      "fill_l": 30
+      "tank_l": 48
     },
     {
       "name": "Bulli",
       "fuel": "diesel",
       "l_per_100km": 8,
-      "fill_l": 60
+      "tank_l": 80
     },
     {
       "name": "Mama",
       "fuel": "e10",
       "l_per_100km": 6,
-      "fill_l": 25,
+      "tank_l": 50,
       "home": "mama",
       "include": [
         "51d4b5a5-a095-1aa0-e100-80009459e03a",
