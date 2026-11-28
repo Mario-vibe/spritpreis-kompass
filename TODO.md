@@ -3,8 +3,20 @@
 - [ ] **Tankmenge Bulli klären:** Angenommen sind 60 l. Eintragen in `config.json` unter `vehicles` → `fill_l`.
       Davon hängt ab, ab welchem Preisunterschied sich ein Umweg lohnt.
 - [x] **Tankmenge Opel:** 30 l (Tankliste: Durchschnitt 27 l, höchstens etwa 45 l).
-- [ ] **Tankrabatt prüfen (Mitte Dezember 2026):** Wird die Senkung der Energiesteuer über den
-      31.12.2026 hinaus verlängert? Falls ja, `rabatt_end` in `config.json` anpassen.
+- [ ] **Tankrabatt und Spritpreisdeckel prüfen (Mitte Dezember 2026):**
+      - Wird die Senkung der Energiesteuer über den 31.12.2026 hinaus verlängert? Falls ja,
+        `rabatt_end` in `config.json` anpassen.
+      - Spritpreisdeckel: Entwurf des Wirtschaftsministeriums, Kabinettsbeschluss geplant am
+        2.12.2026. Stand Ende November: Start spätestens 1.1.2027, befristet bis 31.3.2027
+        (Verlängerung auf höchstens ein Jahr möglich), bundesweiter Höchstpreis für E5, E10 und
+        Diesel, an Werktagen von der Markttransparenzstelle beim Bundeskartellamt per Formel
+        berechnet, Bußgeld bis 100.000 €, Autobahntankstellen ausgenommen, Länder dürfen abweichen.
+        Strittig: Bezug teuerste Region oder Durchschnitt (davon hängt ab, ob der Deckel überhaupt greift).
+      - Prüfen: Was wurde endgültig beschlossen? Ersetzt der Deckel den Tankrabatt?
+      - Klären: Veröffentlicht das Bundeskartellamt den Höchstpreis täglich in abrufbarer Form?
+      - Danach entscheiden: Höchstpreis als Linie im Diagramm anzeigen und als Obergrenze in die
+        Prognose einbauen (würde den Sprung um 12 Uhr kappen, derzeit Diesel etwa +30 ct auf rund
+        229 ct). Greenline (Autobahn) bliebe ungedeckelt.
 - [ ] **Verzögerungsanalyse ansehen (ab etwa Anfang Januar 2027):** Wie viele Tage hinkt die
       Zapfsäule dem Großhandel hinterher? Bei nur 2 bis 3 Tagen könnten tagesaktuelle Börsendaten
       (kostenpflichtig) die Prognose verbessern, bei einer Woche oder mehr lohnt sich das nicht.
