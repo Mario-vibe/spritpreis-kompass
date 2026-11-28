@@ -1,7 +1,9 @@
 # Offene Punkte
 
-- [ ] **Tankmenge Bulli klären:** Angenommen sind 60 l. Eintragen in `config.json` unter `vehicles` → `fill_l`.
-      Davon hängt ab, ab welchem Preisunterschied sich ein Umweg lohnt.
+- [ ] **Tankgröße von Mamas Auto klären:** Angenommen sind 50 l. Steht in der Betriebsanleitung
+      (Technische Daten, Füllmengen) oder lässt sich über Modell und Baujahr nachschlagen
+      (Fahrzeugschein Feld D.2/D.3 und B). Eintragen in `config.json` unter `vehicles` → Mama.
+- [x] **Tankgröße Bulli:** 80 l. **Tankgröße Opel:** 48 l. Für „voll“ werden 90 % angenommen.
 - [x] **Tankmenge Opel:** 30 l (Tankliste: Durchschnitt 27 l, höchstens etwa 45 l).
 - [ ] **Tankrabatt und Spritpreisdeckel prüfen (Mitte Dezember 2026):**
       - Wird die Senkung der Energiesteuer über den 31.12.2026 hinaus verlängert? Falls ja,
