@@ -133,7 +133,7 @@ td.gain{font-variant-numeric:tabular-nums;font-weight:600}
 td.gain.pos{color:var(--good)} td.gain.neg{color:var(--bad)} td.gain.flat{color:var(--ink-3);font-weight:400}
 td.calc{cursor:help;text-decoration:underline dotted;text-decoration-color:var(--line);text-underline-offset:3px}
 td.calc:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
-.calc-tip{position:absolute;z-index:20;max-width:min(360px,calc(100vw - 16px));background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:12px 14px;font-size:.85rem;display:grid;gap:6px;pointer-events:none}
+.calc-tip{position:absolute;z-index:20;box-sizing:border-box;max-width:min(390px,calc(100vw - 16px));background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:12px 14px;font-size:.85rem;display:grid;gap:6px;pointer-events:none}
 .calc-tip .ct-title{font-family:var(--f-display);font-size:1.05rem;font-weight:600;padding:0 11px} /* bündig mit dem Text in den Kästchen */
 .calc-tip .ct-sub{color:var(--ink-2);margin-top:-4px}
 .calc-tip .ct-calc{color:var(--ink-2);font-size:.8rem;line-height:1.45;font-variant-numeric:tabular-nums}

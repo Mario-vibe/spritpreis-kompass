@@ -583,8 +583,17 @@ function showCalc(td){
   if(td!==calcFor)calcAt=Date.now();
   calcTip.innerHTML=html;calcTip.classList.toggle("si",isSt);calcTip.hidden=false;calcFor=td;
   const r=td.getBoundingClientRect(),w=calcTip.offsetWidth,h=calcTip.offsetHeight,vw=document.documentElement.clientWidth;
+  const vh=window.innerHeight;
   let left=isSt?Math.min(Math.max(8,r.left),vw-w-8):Math.min(Math.max(8,r.right-w),vw-w-8);let top=r.bottom+6;
-  if(top+h>window.innerHeight-8&&r.top-h-6>8)top=r.top-h-6;
+  if(top+h>vh-8){
+    if(r.top-h-6>=8)top=r.top-h-6; // passt über das Feld
+    else{
+      // passt weder darunter noch darüber: so hoch schieben, dass es ganz im Fenster steht,
+      // und möglichst neben das Feld setzen, damit es das angetippte Feld nicht verdeckt
+      top=Math.max(8,Math.min(r.top+r.height/2-h/2,vh-h-8));
+      if(r.left-w-12>=8)left=r.left-w-12;else if(r.right+w+12<=vw-8)left=r.right+12;
+    }
+  }
   calcTip.style.left=(left+window.scrollX)+"px";calcTip.style.top=(top+window.scrollY)+"px";
 }
 function hideCalc(){calcTip.hidden=true;calcFor=null}
