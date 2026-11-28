@@ -27,7 +27,11 @@ jobs:
     outputs:
       publish: ${{ steps.fetch.outputs.publish }}
     steps:
+      # Immer den neuesten Stand des Zweigs holen, nicht den Stand beim Anstoßen:
+      # Wartet ein Lauf hinter einem anderen, hat der inzwischen neue Daten gespeichert.
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref_name }}
 
       - name: Aktuelle Preise von Tankerkönig holen
         id: fetch

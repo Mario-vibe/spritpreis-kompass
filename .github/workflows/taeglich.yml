@@ -22,7 +22,11 @@ jobs:
   taeglich:
     runs-on: ubuntu-latest
     steps:
+      # Immer den neuesten Stand des Zweigs holen, nicht den Stand beim Anstoßen:
+      # Wartet ein Lauf hinter einem anderen, hat der inzwischen neue Daten gespeichert.
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref_name }}
 
       - name: Rohöl, Großhandel und Wechselkurs laden
         run: python3 scripts/fetch_market.py

@@ -34,7 +34,11 @@ jobs:
           echo "::add-mask::$(jq -r '.inputs.breite' "$GITHUB_EVENT_PATH")"
           echo "::add-mask::$(jq -r '.inputs.laenge' "$GITHUB_EVENT_PATH")"
 
+      # Immer den neuesten Stand des Zweigs holen, nicht den Stand beim Anstoßen:
+      # Wartet ein Lauf hinter einem anderen, hat der inzwischen neue Daten gespeichert.
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref_name }}
 
       - name: Entfernungen berechnen
         env:
