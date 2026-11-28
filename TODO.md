@@ -12,7 +12,12 @@
         Diesel, an Werktagen von der Markttransparenzstelle beim Bundeskartellamt per Formel
         berechnet, Bußgeld bis 100.000 €, Autobahntankstellen ausgenommen, Länder dürfen abweichen.
         Strittig: Bezug teuerste Region oder Durchschnitt (davon hängt ab, ob der Deckel überhaupt greift).
-      - Prüfen: Was wurde endgültig beschlossen? Ersetzt der Deckel den Tankrabatt?
+      - Prüfen: Was wurde endgültig beschlossen? Ersetzt der Deckel den Tankrabatt? Startet er am
+        1.1. oder erst am 3.1.2027 (so ein Bericht)?
+      - 12-Uhr-Regel: Bleibt sie bestehen? Bisher keine ausdrückliche Aussage gefunden, aber alles
+        deutet darauf hin: Der Höchstpreis soll jeweils am Folgetag ab 12 Uhr gelten, und das RWI
+        sieht die Wirkung des Deckels vor allem im Kappen der 12-Uhr-Spitze. Falls sie doch entfällt
+        oder sich ändert, müssen Prognose und Hinweise in der App angepasst werden.
       - Klären: Veröffentlicht das Bundeskartellamt den Höchstpreis täglich in abrufbarer Form?
       - Danach entscheiden: Höchstpreis als Linie im Diagramm anzeigen und als Obergrenze in die
         Prognose einbauen (würde den Sprung um 12 Uhr kappen, derzeit Diesel etwa +30 ct auf rund
